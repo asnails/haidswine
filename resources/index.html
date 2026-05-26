@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牧知汇 - 知识资源库</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 复用您喜欢的蓝白简洁风格 --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f8fc;
+            color: #1a2c3e;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        /* 导航栏 (稍作调整，突出“资源库”当前页) */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 0;
+        }
+        .nav-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .logo h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1e4a76;
+        }
+        .logo p {
+            font-size: 0.75rem;
+            color: #5c7c8f;
+            margin-top: 2px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            font-weight: 500;
+            color: #2c5a7a;
+            font-size: 0.9rem;
+            margin-left: 28px;
+        }
+        .nav-links a:hover { color: #3b82f6; }
+        /* 横幅 */
+        .hero {
+            background: #eef3fc;
+            border-radius: 24px;
+            margin: 32px 0 40px;
+            padding: 32px 36px;
+        }
+        .hero h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e4a76;
+            margin-bottom: 12px;
+        }
+        .hero .accent { color: #3b82f6; }
+        .hero p {
+            font-size: 1rem;
+            color: #3a6b8c;
+            margin-bottom: 20px;
+        }
+        /* 文章列表区域 */
+        .section-header {
+            margin: 24px 0 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .section-header h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e4a76;
+        }
+        .articles-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        .article-item {
+            background: white;
+            border-radius: 20px;
+            padding: 24px 28px;
+            border: 1px solid #e4edf5;
+            transition: all 0.2s ease;
+        }
+        .article-item:hover {
+            border-color: #c5d9f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .article-type {
+            display: inline-block;
+            background: #eef3fc;
+            color: #2c6a9e;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+        .article-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1a3a5c;
+            margin-bottom: 12px;
+        }
+        .article-content p {
+            color: #4c6a82;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+        footer {
+            background: #e9f0f7;
+            border-radius: 24px 24px 0 0;
+            padding: 28px 24px;
+            text-align: center;
+            color: #4a7a9e;
+            font-size: 0.8rem;
+        }
+        @media (max-width: 640px) {
+            .container { padding: 0 16px; }
+            .hero { padding: 24px 20px; }
+            .hero h2 { font-size: 1.4rem; }
+            .article-item { padding: 18px 20px; }
+            .nav-links a { margin-left: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div class="container nav-flex">
+        <div class="logo">
+            <h1>牧知汇</h1>
+            <p>猪群健康管理 · 精准繁育智库</p>
+        </div>
+        <div class="nav-links">
+            <a href="#">资源库</a>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="hero">
+        <h2>牧知汇 · <span class="accent">知识资源库</span></h2>
+        <p>猪群健康管理 · 提高繁殖效率 · 成为国内顶尖的5%猪场</p>
+    </div>
+    <div class="section-header">
+        <h3>前沿知识 · 实战分享</h3>
+    </div>
+    <div id="articlesList" class="articles-list">加载文章中...</div>
+</div>
+<footer>
+    <p>© 2025 牧知汇 · 猪群健康管理 | 提高繁殖效率</p>
+</footer>
+
+<script>
+    // 关键：文章数据加载路径需要根据当前页面位置调整
+    // 由于 resources/index.html 需要向上级目录查找 articles.json
+    let articles = [];
+
+    async function fetchArticles() {
+        try {
+            // 尝试加载上级目录的 articles.json
+            const response = await fetch('../articles.json?v=' + Date.now());
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) articles = data;
+                else if (data.articles && Array.isArray(data.articles)) articles = data.articles;
+                else useDefaultArticles();
+            } else {
+                useDefaultArticles();
+            }
+        } catch (e) {
+            useDefaultArticles();
+        }
+        renderArticles();
+    }
+
+    function useDefaultArticles() {
+        articles = [
+            { type: "繁殖效率", title: "批次化生产提高母猪年产断奶仔数", content: "通过优化批次间隔与同步发情技术，结合智能化饲喂站，PSY从24.5提升至28.2，跻身顶尖水平。" },
+            { type: "健康管理", title: "蓝耳病净化与群体免疫力提升方案", content: "基于封闭式管理及疫苗免疫评估，母猪流产率下降62%，仔猪存活率提升至95%以上。" },
+            { type: "生产技术", title: "智能化环控与猪群舒适度指数", content: "环境监测技术通过传感器联动风机，每头母猪年治疗成本降低40元，大幅提高生产效率。" }
+        ];
+    }
+
+    function renderArticles() {
+        const container = document.getElementById('articlesList');
+        if (!articles.length) {
+            container.innerHTML = '<div style="text-align:center; padding: 40px;">暂无文章</div>';
+            return;
+        }
+        let html = '';
+        articles.forEach(article => {
+            html += `
+                <div class="article-item">
+                    <div class="article-type">${escapeHtml(article.type)}</div>
+                    <div class="article-title">${escapeHtml(article.title)}</div>
+                    <div class="article-content"><p>${escapeHtml(article.content)}</p></div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    fetchArticles();
+</script>
+</body>
+</html>
