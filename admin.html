@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>牧知汇 - 内容管理后台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f1f5f9;
+            color: #1a2c3e;
+            line-height: 1.5;
+        }
+        .header {
+            background: #1e4a76;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header h1 { font-size: 1.4rem; }
+        .header a { color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .two-columns { display: flex; gap: 24px; flex-wrap: wrap; }
+        .form-panel { flex: 1; min-width: 350px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .list-panel { flex: 1.5; min-width: 400px; background: white; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #1e4a76; }
+        select, input, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: #1e4a76; box-shadow: 0 0 0 2px rgba(30,74,118,0.1); }
+        textarea { resize: vertical; min-height: 200px; font-family: monospace; }
+        .btn {
+            background: #1e4a76;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .btn-danger { background: #dc2626; }
+        .btn-secondary { background: #64748b; }
+        .btn-success { background: #10b981; }
+        .btn-sm { padding: 4px 12px; font-size: 12px; }
+        .article-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+        .article-item:hover { background: #f8fafc; }
+        .article-title { flex: 1; font-weight: 500; }
+        .article-category { 
+            background: #e2e8f0; 
+            padding: 2px 8px; 
+            border-radius: 20px; 
+            font-size: 12px;
+            margin-right: 12px;
+            min-width: 70px;
+            text-align: center;
+        }
+        .article-actions { display: flex; gap: 8px; }
+        .status-bar {
+            background: #e2e8f0;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .success-msg {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .preview-area {
+            margin-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+        }
+        .preview-title { font-weight: 600; margin-bottom: 12px; color: #1e4a76; }
+        .markdown-preview {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .markdown-preview h1 { font-size: 1.2rem; margin: 0 0 8px 0; }
+        .markdown-preview h2 { font-size: 1rem; margin: 8px 0; }
+        .markdown-preview ul, .markdown-preview ol { margin-left: 20px; }
+        .markdown-preview p { margin: 6px 0; }
+        hr { margin: 16px 0; border: none; border-top: 1px solid #e2e8f0; }
+        @media (max-width: 900px) {
+            .two-columns { flex-direction: column; }
+            .form-panel, .list-panel { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 牧知汇 - 内容管理后台</h1>
+        <div>
+            <a href="index.html" target="_blank">🏠 查看首页</a>
+            <a href="articles.json" target="_blank" style="margin-left: 12px;">📄 查看 JSON</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="status-bar">
+            <span>📊 文章总数: <strong id="totalCount">0</strong></span>
+            <span>💾 数据存储于: <strong>articles.json</strong></span>
+            <button class="btn-secondary btn-sm" onclick="refreshList()">🔄 刷新</button>
+        </div>
+        
+        <div id="successMsg" class="success-msg"></div>
+        
+        <div class="two-columns">
+            <!-- 左侧：编辑表单 -->
+            <div class="form-panel">
+                <h3 style="margin-bottom: 20px;" id="formTitle">📝 新建文章</h3>
+                <input type="hidden" id="editIndex" value="-1">
+                
+                <div class="form-group">
+                    <label>📁 文章分类</label>
+                    <select id="articleType">
+                        <option value="生产管理">生产管理</option>
+                        <option value="猪群健康">猪群健康</option>
+                        <option value="批次化生产">批次化生产</option>
+                        <option value="管理思路">管理思路</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>📌 文章标题</label>
+                    <input type="text" id="articleTitle" placeholder="输入文章标题">
+                </div>
+                
+                <div class="form-group">
+                    <label>📄 正文内容（支持 Markdown 格式）</label>
+                    <textarea id="articleContent" placeholder="支持 Markdown 格式：# 标题、**粗体**、- 列表、> 引用等"></textarea>
+                </div>
+                
+                <div class="preview-area">
+                    <div class="preview-title">👁️ 实时预览</div>
+                    <div id="markdownPreview" class="markdown-preview"></div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button class="btn" onclick="saveArticle()">💾 保存文章</button>
+                    <button class="btn-secondary" onclick="clearForm()">🗑️ 清空表单</button>
+                    <button id="deleteBtn" class="btn-danger" onclick="deleteCurrentArticle()" style="display: none;">🗑️ 删除文章</button>
+                </div>
+            </div>
+            
+            <!-- 右侧：文章列表 -->
+            <div class="list-panel">
+                <h3 style="margin-bottom: 16px;">📋 文章列表</h3>
+                <div id="articleList"></div>
+            </div>
+        </div>
+        
+        <hr style="margin: 24px 0;">
+        
+        <!-- 批量操作区域 -->
+        <div style="background: white; border-radius: 16px; padding: 20px;">
+            <h3 style="margin-bottom: 16px;">⚙️ 批量操作</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-secondary" onclick="exportToJSON()">📥 导出 JSON 文件</button>
+                <label class="btn-secondary" style="cursor: pointer; display: inline-block; padding: 10px 20px; border-radius: 8px;">
+                    📤 导入 JSON 文件
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFromJSON(this)">
+                </label>
+                <button class="btn-danger" onclick="confirmClearAll()">⚠️ 清空所有文章</button>
+                <button class="btn-success" onclick="loadSampleData()">📚 加载示例数据</button>
+            </div>
+            <p style="font-size: 12px; color: #64748b; margin-top: 12px;">
+                💡 提示：文章数据保存在浏览器的 localStorage 中，点击「导出 JSON 文件」可下载到本地，上传到 GitHub 即可生效。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 分类映射（保持与 index.html 一致）
+        const CATEGORY_ORDER = ['生产管理', '猪群健康', '批次化生产', '管理思路'];
+        
+        // 存储文章数据
+        let articles = [];
+        
+        // 初始化
+        function init() {
+            loadFromLocalStorage();
+            renderList();
+            updateTotalCount();
+        }
+        
+        // 从 localStorage 加载
+        function loadFromLocalStorage() {
+            const stored = localStorage.getItem('muzhihui_articles');
+            if (stored) {
+                try {
+                    articles = JSON.parse(stored);
+                } catch(e) { articles = []; }
+            }
+            if (!articles || articles.length === 0) {
+                loadSampleData();
+            }
+        }
+        
+        // 保存到 localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('muzhihui_articles', JSON.stringify(articles));
+            updateTotalCount();
+        }
+        
+        // 渲染文章列表
+        function renderList() {
+            const container = document.getElementById('articleList');
+            if (articles.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #8ba3bc;">暂无文章，点击「加载示例数据」开始</div>';
+                return;
+            }
+            
+            // 按分类分组显示
+            let html = '';
+            CATEGORY_ORDER.forEach(category => {
+                const categoryArticles = articles.filter(a => a.type === category);
+                if (categoryArticles.length === 0) return;
+                
+                html += `<div style="margin-bottom: 20px;"><div style="font-weight: 700; color: #1e4a76; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid #e2e8f0;">📁 ${category}</div>`;
+                categoryArticles.forEach((article, idx) => {
+                    const originalIndex = articles.findIndex(a => a === article);
+                    html += `
+                        <div class="article-item" onclick="editArticle(${originalIndex})">
+                            <span class="article-category">${article.type}</span>
+                            <span class="article-title">${escapeHtml(article.title)}</span>
+                            <div class="article-actions">
+                                <button class="btn-secondary btn-sm" onclick="event.stopPropagation(); editArticle(${originalIndex})">✏️ 编辑</button>
+                                <button class="btn-danger btn-sm" onclick="event.stopPropagation(); deleteArticle(${originalIndex})">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+        
+        // 编辑文章
+        function editArticle(index) {
+            const article = articles[index];
+            if (!article) return;
+            
+            document.getElementById('editIndex').value = index;
+            document.getElementById('articleType').value = article.type;
+            document.getElementById('articleTitle').value = article.title;
+            document.getElementById('articleContent').value = article.content || '';
+            document.getElementById('formTitle').innerHTML = '✏️ 编辑文章';
+            document.getElementById('deleteBtn').style.display = 'inline-block';
+            
+            // 更新预览
+            updatePreview();
+            
+            // 滚动到表单
+            document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // 保存文章
+        function saveArticle() {
+            const type = document.getElementById('articleType').value;
+            const title = document.getElementById('articleTitle').value.trim();
+            const content = document.getElementById('articleContent').value;
+            
+            if (!title) {
+                showMessage('请填写文章标题', 'error');
+                return;
+            }
+            
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+            const newArticle = { type, title, content };
+            
+            if (editIndex >= 0 && articles[editIndex]) {
+                // 编辑现有文章
+                articles[editIndex] = newArticle;
+                showMessage('✅ 文章已更新');
+            } else {
+                // 新增文章
+                articles.push(newArticle);
+                showMessage('✅ 新文章已添加');
+            }
+            
+            saveToLocalStorage();
+            renderList();
+            clearForm();
+        }
+        
+        // 删除文章
+        function deleteArticle(index) {
+            if (confirm('确定要删除这篇文章吗？')) {
+                articles.splice(index, 1);
+                saveToLocalStorage();
+                renderList();
+                clearForm();
+                showMessage('🗑️ 文章已删除');
+            }
+        }
+        
+        // 删除当前编辑的文章
+        function deleteCurrentArticle() {
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+            if (editIndex >= 0 && articles[editIndex]) {
+                deleteArticle(editIndex);
+            }
+        }
+        
+        // 清空表单
+        function clearForm() {
+            document.getElementById('editIndex').value = '-1';
+            document.getElementById('articleType').value = '生产管理';
+            document.getElementById('articleTitle').value = '';
+            document.getElementById('articleContent').value = '';
+            document.getElementById('formTitle').innerHTML = '📝 新建文章';
+            document.getElementById('deleteBtn').style.display = 'none';
+            document.getElementById('markdownPreview').innerHTML = '<p style="color: #8ba3bc;">预览将显示在这里...</p>';
+        }
+        
+        // 刷新列表
+        function refreshList() {
+            loadFromLocalStorage();
+            renderList();
+            showMessage('🔄 已刷新');
+        }
+        
+        // 导出 JSON
+        function exportToJSON() {
+            const dataStr = JSON.stringify(articles, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'articles.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showMessage('📥 文件已导出，请上传到 GitHub 仓库的 resources 目录');
+        }
+        
+        // 导入 JSON
+        function importFromJSON(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        articles = imported;
+                        saveToLocalStorage();
+                        renderList();
+                        showMessage('📤 导入成功！');
+                    } else {
+                        showMessage('文件格式错误：需要数组格式', 'error');
+                    }
+                } catch(err) {
+                    showMessage('解析失败：请确保是有效的 JSON 文件', 'error');
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
+        }
+        
+        // 加载示例数据
+        function loadSampleData() {
+            articles = [
+                { type: "生产管理", title: "6000头规模母猪场生产节律设计", content: "# 生产节律设计\n\n规模化猪场的生产节律设计是实现高效运转的核心。\n\n**关键指标：**\n- 年产胎次：2.2-2.4胎/年\n- 非生产天数：<40天\n- 分娩率：>85%" },
+                { type: "生产管理", title: "全进全出模式下的产房周转率提升方案", content: "# 产房周转率提升方案\n\n全进全出（AIAO）是现代化猪场的标准生产模式。\n\n## 提升策略\n- 缩短清洗时间\n- 优化断奶日龄\n- 标准化流程" },
+                { type: "猪群健康", title: "蓝耳病双阴性场维持策略", content: "# 蓝耳病防控\n\n## 维持策略\n- 引种管理\n- 生物安全升级\n- 监测体系\n\n> 保持双阴性需要全员参与" },
+                { type: "批次化生产", title: "18天批次生产模式详解与优势分析", content: "# 18天批次模式\n\n## 核心参数\n- 批次间隔：18天\n- 母猪组数：8组\n- 年产批次数：20.3批\n\n**优势：**\n* 年产胎次更高\n* 产房利用率提升30%" },
+                { type: "管理思路", title: "秦英林：养猪虽传统，但值得深耕", content: "# 秦英林观点\n\n## 核心理念\n养猪行业虽然传统，但通过**科技创新**和**管理升级**，仍有巨大的发展空间。\n\n> 目标：断奶成本控制在240元/头以内" }
+            ];
+            saveToLocalStorage();
+            renderList();
+            clearForm();
+            showMessage('📚 示例数据已加载');
+        }
+        
+        // 清空所有文章
+        function confirmClearAll() {
+            if (confirm('⚠️ 警告：这将删除所有文章！确定要继续吗？')) {
+                articles = [];
+                saveToLocalStorage();
+                renderList();
+                clearForm();
+                showMessage('🗑️ 所有文章已清空');
+            }
+        }
+        
+        // 更新总数显示
+        function updateTotalCount() {
+            document.getElementById('totalCount').innerText = articles.length;
+        }
+        
+        // 显示消息
+        function showMessage(msg, type = 'success') {
+            const msgDiv = document.getElementById('successMsg');
+            msgDiv.textContent = msg;
+            msgDiv.style.backgroundColor = type === 'success' ? '#d1fae5' : '#fee2e2';
+            msgDiv.style.color = type === 'success' ? '#065f46' : '#991b1b';
+            msgDiv.style.display = 'block';
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 简单 Markdown 预览
+        function updatePreview() {
+            const content = document.getElementById('articleContent').value;
+            const previewDiv = document.getElementById('markdownPreview');
+            if (!content.trim()) {
+                previewDiv.innerHTML = '<p style="color: #8ba3bc;">预览将显示在这里...</p>';
+                return;
+            }
+            previewDiv.innerHTML = simpleMarkdownToHTML(content);
+        }
+        
+        function simpleMarkdownToHTML(text) {
+            let html = text;
+            // 标题
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            // 粗体
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // 斜体
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // 无序列表
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+            // 有序列表
+            html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+            // 引用
+            html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+            // 分割线
+            html = html.replace(/^---$/gm, '<hr>');
+            // 段落
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+            // 清理空标签
+            html = html.replace(/<p><\/p>/g, '');
+            return html;
+        }
+        
+        // 监听内容变化实时预览
+        document.getElementById('articleContent').addEventListener('input', updatePreview);
+        document.getElementById('articleTitle').addEventListener('input', updatePreview);
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        init();
+    </script>
+</body>
+</html>
