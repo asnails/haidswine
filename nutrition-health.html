@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猪病学知识库 | 极简养猪知识中心</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f5f7fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        
+        .dxy-nav { background: #1a5bbf; border-bottom: 1px solid #0e4a9e; }
+        .dxy-nav a { color: rgba(255,255,255,0.9); transition: all 0.2s; font-size: 0.85rem; }
+        .dxy-nav a:hover { color: white; background: rgba(255,255,255,0.1); }
+        .dxy-nav .active { background: #0e4a9e; color: white; }
+        
+        .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: #eef2f6; border-radius: 3px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        .main-menu-item { transition: all 0.2s ease; cursor: pointer; border-left: 3px solid transparent; font-size: 0.85rem; }
+        .main-menu-item:hover { background: #f0f4f9; color: #1a5bbf; }
+        .main-menu-item.active { background: #e8f0fe; color: #1a5bbf; border-left-color: #1a5bbf; }
+        
+        .sub-menu-item { transition: all 0.2s ease; cursor: pointer; border-left: 3px solid transparent; font-size: 0.8rem; }
+        .sub-menu-item:hover { background: #f5f7fb; color: #1a5bbf; }
+        .sub-menu-item.active { background: #e8f0fe; color: #1a5bbf; border-left-color: #1a5bbf; }
+        
+        .content-card { background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #eef2f6; }
+        
+        .core-summary { background: linear-gradient(135deg, #e8f0fe 0%, #dbeafe 100%); padding: 1rem 1.5rem; border-bottom: 1px solid #c7daf5; }
+        .core-summary p { font-size: 0.9rem; line-height: 1.6; color: #1e3a5f; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; background: #fafbfc; }
+        .info-card { background: white; border-radius: 12px; padding: 1rem; border: 1px solid #eef2f6; transition: all 0.2s; }
+        .info-card:hover { box-shadow: 0 4px 12px rgba(26,91,191,0.08); border-color: #1a5bbf; }
+        .info-card-title { font-size: 0.95rem; font-weight: 600; color: #1a5bbf; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 2px solid #eef2f6; padding-bottom: 0.5rem; }
+        .info-card-content { font-size: 0.85rem; color: #4a5568; line-height: 1.6; }
+        
+        .eval-card { background: #fef3c7; border-color: #f59e0b; }
+        .eval-card .info-card-title { color: #d97706; }
+        
+        .file-card { background: #fafbfc; border-radius: 10px; padding: 0.7rem; transition: all 0.2s ease; cursor: pointer; border: 1px solid #eef2f6; }
+        .file-card:hover { border-color: #1a5bbf; background: white; box-shadow: 0 2px 8px rgba(26,91,191,0.08); }
+        
+        .preview-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; display: flex; flex-direction: column; }
+        .preview-toolbar { background: #2d3748; color: white; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .preview-container { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: center; padding: 1.5rem; }
+        .preview-canvas { max-width: 100%; height: auto; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border-radius: 8px; }
+        .file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.7rem; }
+        .loading-spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid #e2e8f0; border-top-color: #1a5bbf; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-preview { background: #1a5bbf; color: white; padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.65rem; }
+        .section-divider { height: 2px; background: linear-gradient(90deg, #1a5bbf, #eef2f6); }
+        
+        @media (max-width: 768px) { .info-grid { grid-template-columns: 1fr; } }
+        
+        .disease-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 1rem 1.5rem; border-bottom: 1px solid #eef2f6; }
+        .disease-header h2 { font-size: 1.25rem; font-weight: 700; color: #1e293b; }
+        
+        .doc-section-title { font-size: 0.95rem; font-weight: 600; color: #1e293b; margin-bottom: 0.75rem; }
+        
+        .sidebar-container { width: 260px; flex-shrink: 0; }
+        @media (max-width: 768px) { .sidebar-container { width: 100%; } }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航栏 -->
+<nav class="dxy-nav sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-12">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-piggy-bank text-white text-lg"></i>
+                <span class="text-white font-semibold text-base hidden sm:inline">猪病学知识库</span>
+                <div class="hidden md:flex space-x-0.5" id="navMenu"></div>
+            </div>
+            <button id="mobileMenuBtn" class="md:hidden text-white/80 text-xl"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t shadow-lg"><div class="flex flex-col p-2" id="mobileNavMenu"></div></div>
+</nav>
+
+<!-- 主内容 -->
+<div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5">
+    <div class="flex flex-col md:flex-row gap-5">
+        
+        <!-- 左侧目录 -->
+        <div class="sidebar-container">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden sticky top-16">
+                <div class="bg-slate-50 px-3 py-2 border-b border-slate-100">
+                    <h3 class="font-medium text-slate-700 text-xs flex items-center"><i class="fas fa-folder-tree text-blue-600 mr-1.5"></i>知识库目录</h3>
+                </div>
+                <div class="sidebar-scroll overflow-y-auto" style="max-height: calc(100vh - 100px);"><div id="sidebarMenu" class="py-2"></div></div>
+            </div>
+        </div>
+        
+        <!-- 右侧内容 -->
+        <div class="flex-1" id="contentArea"><div class="content-card p-8 text-center"><div class="loading-spinner mx-auto mb-3"></div><p class="text-slate-500">加载中...</p></div></div>
+    </div>
+</div>
+
+<!-- PDF预览 -->
+<div id="previewModal" class="preview-modal" style="display: none;">
+    <div class="preview-toolbar">
+        <div class="flex items-center space-x-4"><button onclick="closePreview()" class="text-white/80 hover:text-white"><i class="fas fa-times text-xl"></i></button><span id="previewTitle" class="font-medium truncate max-w-md text-base"></span></div>
+        <div class="flex items-center space-x-3">
+            <button id="prevPageBtn" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-sm disabled:opacity-50" disabled><i class="fas fa-chevron-left"></i> 上一页</button>
+            <span id="pageInfo" class="text-sm">加载中...</span>
+            <button id="nextPageBtn" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-sm disabled:opacity-50" disabled>下一页 <i class="fas fa-chevron-right"></i></button>
+            <a id="downloadBtn" href="#" download class="bg-blue-600 hover:bg-blue-500 px-3 py-1 rounded text-sm"><i class="fas fa-download"></i> 下载</a>
+        </div>
+    </div>
+    <div id="previewContainer" class="preview-container"><canvas id="previewCanvas" class="preview-canvas"></canvas></div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+// ========== 完整数据：9个主板块（导航顺序已调整） ==========
+const diseaseData = {
+    // 1. 健康管理
+    health: {
+        name: '🏥 健康管理', 
+        icon: 'fa-heartbeat',
+        children: {
+            biosecurity: { name: '生物安全体系', summary: '生物安全是防控疫病的第一道防线，通过隔离、消毒、管控等措施，阻断病原传入和传播。', concept: '• 定义：防止病原引入和传播的所有管理措施<br>• 核心理念：分区管理、单向流动、消毒净化', keyMeasures: '• 场区布局：净区/污区严格分开<br>• 人员管控：入场淋浴、更衣、隔离48小时<br>• 车辆管理：洗消中心+烘干', productionMgmt: '• 建立生物安全SOP手册，全员培训考核<br>• 设置生物安全专员，每日巡查', effect: '✅ 执行到位的生物安全体系可预防80%以上的疫病传入。' },
+            immunization: { name: '科学免疫程序', summary: '科学免疫是预防特定疫病的最经济手段。', concept: '• 原理：通过疫苗接种激发特异性免疫<br>• 疫苗选择原则：安全、有效、匹配流行毒株', keyMeasures: '• 抗体监测：每季度抽检<br>• 免疫程序优化：根据母源抗体衰减规律调整', productionMgmt: '• 建立免疫档案，记录批号、剂量、操作人<br>• 免疫效果评估：抗体合格率>85%为达标', effect: '✅ 科学免疫可显著降低特定疫病发病率。' },
+            healthMonitoring: { name: '健康监测与预警', summary: '通过临床巡视、实验室检测、生产数据分析，实现疫病早期发现和快速响应。', concept: '• 目的：早发现、早诊断、早处置<br>• 监测内容：临床观察、死亡率、采食量、抗体、病原', keyMeasures: '• 每日临床巡查<br>• 定期送检：每2-3个月采集血样检测', productionMgmt: '• 建立健康监测周报/月报制度<br>• 异常事件响应预案', effect: '✅ 主动监测可提前3-7天发现疫病苗头。' },
+            nutritionImmunity: { name: '营养与免疫', summary: '营养是免疫力的物质基础。科学配给营养可增强猪群抗病力。', concept: '• 核心：免疫营养素的精准供给<br>• 关键营养素：维生素E、C、硒、锌', keyMeasures: '• 母猪：围产期添加免疫增强剂<br>• 仔猪：教槽料强化维生素E和硒', productionMgmt: '• 分阶段精准营养<br>• 原料品控：霉菌毒素严格控制在国标以内', effect: '✅ 优化营养可提高抗体水平20-30%。' },
+            environmentalControl: { name: '环境控制', summary: '舒适的环境是猪群健康的保障。', concept: '• 目标：创造最适生长环境，最小化应激<br>• 关键参数：温度、湿度、氨气', keyMeasures: '• 温度控制：产房20-22℃，保育24-26℃<br>• 通风换气：氨气<10ppm', productionMgmt: '• 环控设备定期检修<br>• 每日记录温湿度', effect: '✅ 良好环境控制可降低呼吸道疾病30-50%。' },
+            drugManagement: { name: '合理用药', summary: '精准用药，减少耐药性，保障食品安全。', concept: '• 原则：对症、足疗程、轮换用药、避免滥用<br>• 分类管理：抗菌药按重要性分级', keyMeasures: '• 药敏试验：治疗前采样送检<br>• 用药记录：完整记录用药种类、剂量', productionMgmt: '• 定期监测耐药性变化<br>• 制定抗菌药使用年度减量计划', effect: '✅ 精准用药可提高治愈率15-20%，降低药费30%。' }
+        }
+    },
+    // 2. 兽医实践
+    veterinaryPractice: {
+        name: '🏥 兽医实践', 
+        icon: 'fa-stethoscope',
+        children: {
+            clinicalDiagnosis: { name: '临床诊断技术', summary: '兽医临床诊断是疾病防控的第一步。', concept: '• 问诊：了解病史、免疫史、用药史<br>• 视诊：观察精神状态、采食、粪便', keyMeasures: '• 体温正常范围：38-39.5℃<br>• 呼吸频率：10-30次/分钟', productionMgmt: '• 每日临床巡查制度<br>• 建立临床病例档案', effect: '✅ 规范临床诊断可提高早期发现率50%以上。' },
+            necropsy: { name: '尸体剖检技术', summary: '尸体剖检是确定死因、指导治疗和防控的重要工具。', concept: '• 目的：确定死因、评估治疗效果<br>• 原则：尽早剖检（死亡6小时内）', keyMeasures: '• 外部检查：体况、黏膜、皮肤<br>• 内部检查：淋巴结、肺脏、心脏', productionMgmt: '• 不明原因死亡100%剖检<br>• 建立剖检记录档案', effect: '✅ 规范剖检可明确80%以上死因。' },
+            labDiagnosis: { name: '实验室诊断', summary: '实验室诊断是确诊疫病的金标准。', concept: '• 血清学检测：抗体水平评估免疫效果<br>• 病原学检测：PCR、qPCR', keyMeasures: '• 样品采集：时机、部位、数量、保存<br>• 样品运输：冷链、防污染', productionMgmt: '• 制定年度监测计划<br>• 每季度常规血清学监测', effect: '✅ 实验室诊断可提供确诊依据。' }
+        }
+    },
+    // 3. 病毒性疾病
+    viral: {
+        name: '🦠 病毒性疾病', 
+        icon: 'fa-virus',
+        children: {
+            asf: { name: '非洲猪瘟 (ASF)', summary: '非洲猪瘟是急性、热性、高度接触性传染病，死亡率可达100%。', epi: '• 首次发现：1921年肯尼亚<br>• 发病率/死亡率：可达100%', path: '• 靶细胞：单核细胞/巨噬细胞系统<br>• 病理变化：广泛出血、脾脏肿大', treat: '• 无有效治疗药物<br>• 一旦确诊，依法扑杀', control: '• 生物安全：唯一有效手段<br>• 禁止泔水喂猪', evalEffect: '⚠️ 目前无商用疫苗。' },
+            fmd: { name: '口蹄疫 (FMD)', summary: '口蹄疫是A类烈性传染病，传染性强，感染率100%。', epi: '• 病原：口蹄疫病毒(7个血清型)<br>• 发病率100%', path: '• 靶细胞：上皮细胞<br>• 病理变化：口腔、蹄部水疱', treat: '• 无特效治疗药物<br>• 对症处理', control: '• 疫苗免疫：灭活苗（强制免疫）<br>• 免疫程序：种猪3-4次/年', evalEffect: '✅ 疫苗免疫有效降低发病。' },
+            prrs: { name: '蓝耳病 (PRRS)', summary: '蓝耳病是影响养猪业最重要的免疫抑制病之一。', epi: '• 首次发现：1987年美国<br>• 母猪流产率30-80%', path: '• 靶细胞：肺泡巨噬细胞<br>• 免疫抑制：继发感染增加', treat: '• 无特效抗病毒药物<br>• 抗生素控制继发感染', control: '• 疫苗免疫：灭活苗/弱毒苗<br>• 闭群净化', evalEffect: '✅ 疫苗可降低临床发病。' },
+            ppv: { name: '猪细小病毒病 (PPV)', summary: '猪细小病毒是导致母猪繁殖障碍的主要病原之一。', epi: '• 首次发现：1967年<br>• 猪群感染率50-80%', path: '• 靶细胞：分裂旺盛的细胞<br>• 病理变化：胎儿死亡、木乃伊化', treat: '• 无特效治疗药物', control: '• 疫苗免疫：灭活苗（效果优秀）<br>• 后备母猪：配种前免疫2次', evalEffect: '✅ 疫苗免疫效果优秀。' },
+            pcv2: { name: '圆环病毒2型 (PCV2)', summary: '圆环病毒2型是导致断奶仔猪多系统衰竭综合征的主要病原。', epi: '• 首次发现：1991年加拿大<br>• PMWS死亡率10-30%', path: '• 靶细胞：淋巴细胞、巨噬细胞<br>• 免疫抑制：淋巴细胞减少', treat: '• 无特效抗病毒药物<br>• 抗生素控制继发感染', control: '• 疫苗免疫：PCV2灭活苗<br>• 仔猪免疫：2-3周龄', evalEffect: '✅ 疫苗免疫效果良好。' },
+            pcv3: { name: '圆环病毒3型 (PCV3)', summary: 'PCV3是2016年新发现的圆环病毒，可引起PDNS样症状。', epi: '• 首次发现：2016年美国<br>• 仔猪死亡率5-15%', path: '• 靶细胞：血管内皮细胞、淋巴细胞<br>• 病理变化：系统性血管炎', treat: '• 无特效治疗药物', control: '• 目前无商品化疫苗<br>• 加强生物安全', evalEffect: '⚠️ 目前无商品化疫苗。' },
+            pedv: { name: '流行性腹泻 (PEDV)', summary: '以水样腹泻、脱水和呕吐为特征，对哺乳仔猪危害极大。', epi: '• 首次发现：1971年英国<br>• 仔猪死亡率80-100%', path: '• 靶细胞：小肠绒毛上皮细胞<br>• 病理变化：绒毛萎缩', treat: '• 对症治疗：补液、防脱水', control: '• 疫苗免疫：PEDV灭活苗（效果有限）<br>• 返饲：有风险', evalEffect: '⚠️ 现有疫苗保护力有限。' },
+            tgev: { name: '传染性胃肠炎 (TGEV)', summary: '传染性胃肠炎是高度接触性肠道传染病，仔猪死亡率高。', epi: '• 首次发现：1946年美国<br>• 仔猪死亡率50-100%', path: '• 靶细胞：小肠绒毛上皮细胞<br>• 病理变化：绒毛严重萎缩', treat: '• 对症治疗：补液、防脱水', control: '• 疫苗免疫：TGEV灭活苗/弱毒苗<br>• 母猪免疫：产前免疫', evalEffect: '✅ 疫苗免疫结合生物安全可有效控制。' },
+            pdcov: { name: '猪丁型冠状病毒 (PDCoV)', summary: 'PDCoV是2012年新发现的肠道冠状病毒，可引起新生仔猪腹泻。', epi: '• 首次发现：2012年香港<br>• 仔猪腹泻率30-50%', path: '• 靶细胞：小肠绒毛上皮细胞<br>• 病理变化：绒毛萎缩', treat: '• 对症治疗：补液、防脱水', control: '• 目前无商品化疫苗<br>• 加强生物安全', evalEffect: '⚠️ 目前无商品化疫苗。' },
+            porv: { name: '轮状病毒 (PoRV)', summary: '轮状病毒是引起仔猪腹泻的重要病原，A群为主要致病血清型。', epi: '• 血清型：A、B、C群（A群最主要）<br>• 发病率30-50%', path: '• 靶细胞：小肠绒毛上皮细胞<br>• 病理变化：绒毛萎缩', treat: '• 对症治疗：补液、防脱水', control: '• 疫苗免疫：轮状病毒疫苗<br>• 母猪免疫：产前免疫', evalEffect: '✅ 疫苗免疫可提供一定保护。' },
+            siv: { name: '猪流感 (SIV)', summary: '猪流感是急性呼吸道传染病，发病急、传播快。', epi: '• 亚型：H1N1、H3N2、H1N2<br>• 发病率30-50%', path: '• 靶细胞：呼吸道上皮细胞<br>• 病理变化：气管炎、间质性肺炎', treat: '• 对症治疗：退烧、止咳', control: '• 疫苗免疫：SIV灭活苗<br>• 加强通风', evalEffect: '✅ 疫苗免疫可有效降低发病率。' }
+        }
+    },
+    // 4. 细菌性疾病
+    bacterial: {
+        name: '🧫 细菌性疾病', 
+        icon: 'fa-bacterium',
+        children: {
+            ss: { name: '链球菌病 (SS)', summary: '链球菌病是人畜共患病，以脑膜炎、关节炎为特征。', epi: '• 病原：猪链球菌(35个血清型)<br>• 夏秋高发', path: '• 入侵途径：呼吸道、伤口', treat: '• 敏感药物：阿莫西林、头孢类', control: '• 疫苗免疫：链球菌灭活苗', evalEffect: '✅ 疫苗可降低发病率。' },
+            hps: { name: '副猪嗜血杆菌病', summary: '保育猪常见细菌病，常继发于PRRSV或PCV2感染。', epi: '• 发病率10-30%', path: '• 病理变化：纤维素性浆膜炎', treat: '• 敏感药物：头孢噻呋、氟苯尼考', control: '• 疫苗免疫：HPS灭活苗', evalEffect: '✅ 疫苗免疫有效。' },
+            app: { name: '猪传染性胸膜肺炎', summary: '急性出血性纤维素性肺炎，发病急、死亡率高。', epi: '• 春秋高发', path: '• 毒素作用：Apx毒素', treat: '• 敏感药物：头孢类、氟苯尼考', control: '• 疫苗免疫：APP灭活苗', evalEffect: '✅ 疫苗可降低死亡率。' },
+            mh: { name: '支原体肺炎', summary: '慢性呼吸道疾病，导致长期咳嗽、生长迟缓。', epi: '• 感染率30-80%', path: '• 附着：纤毛破坏', treat: '• 敏感药物：泰妙菌素、泰乐菌素', control: '• 疫苗免疫：MH灭活苗', evalEffect: '✅ 疫苗免疫有效。' }
+        }
+    },
+    // 5. 寄生虫疾病
+    parasitic: {
+        name: '🪱 寄生虫疾病', 
+        icon: 'fa-bug',
+        children: {
+            tg: { name: '弓形虫病', summary: '人畜共患寄生虫病，母猪可引起流产。', epi: '• 终末宿主：猫科动物', path: '• 虫体分布：全身各组织', treat: '• 敏感药物：磺胺嘧啶+乙胺嘧啶', control: '• 禁止猫进入猪舍', evalEffect: '✅ 药物预防和治疗有效。' },
+            ic: { name: '球虫病', summary: '哺乳仔猪腹泻的重要原因，发病率高。', epi: '• 发病率30-60%', path: '• 定殖部位：小肠上皮', treat: '• 敏感药物：妥曲珠利', control: '• 保持圈舍干燥清洁', evalEffect: '✅ 仔猪3-5日龄口服妥曲珠利可有效预防。' },
+            sc: { name: '疥螨病', summary: '常见体外寄生虫病，引起剧烈瘙痒、皮肤增厚。', epi: '• 感染率30-80%', path: '• 侵入：皮肤角质层', treat: '• 伊维菌素：0.3mg/kg', control: '• 定期驱虫：每3个月', evalEffect: '✅ 伊维菌素等药物驱虫效果良好。' }
+        }
+    },
+    // 6. 健康与疾病
+    healthDisease: {
+        name: '📋 健康与疾病', 
+        icon: 'fa-notes-medical',
+        children: {
+            healthAssessment: { name: '猪群健康评估', summary: '系统评估猪群健康水平，识别风险因素。', concept: '• 评估维度：生产指标、临床健康、免疫状态<br>• 评估频率：每月综合评估', keyMeasures: '• 生产指标：死亡率、淘汰率、料肉比<br>• 健康指标：发病率、抗体合格率', productionMgmt: '• 建立健康评分卡<br>• 每月健康会议分析问题', effect: '✅ 系统健康评估可识别70%以上风险因素。' },
+            diseaseClassification: { name: '疾病分类与鉴别', summary: '了解疾病分类和鉴别诊断要点。', concept: '• 按病原分类：病毒性、细菌性、寄生虫<br>• 按系统分类：呼吸、消化、繁殖、神经', keyMeasures: '• 呼吸系统疾病鉴别：发热、咳嗽、呼吸困难<br>• 消化系统疾病鉴别：腹泻性状、颜色', productionMgmt: '• 建立鉴别诊断流程图<br>• 定期兽医病例讨论', effect: '✅ 准确鉴别可缩短诊断时间50%。' }
+        }
+    },
+    // 7. 非传染性繁殖障碍
+    reproductiveDisorders: {
+        name: '⚠️ 非传染性繁殖障碍', 
+        icon: 'fa-exclamation-triangle',
+        children: {
+            nutritionalInfertility: { name: '营养性繁殖障碍', summary: '营养失衡是导致繁殖障碍的常见原因。', concept: '• 能量不足：发情延迟、排卵减少<br>• 维生素缺乏：维生素A/E影响繁殖', keyMeasures: '• 后备母猪：配种前2周优饲<br>• 妊娠母猪：分阶段精准营养', productionMgmt: '• 定期体况评分（1-5分）<br>• 保持理想体况（3分）', effect: '✅ 优化营养可提高受胎率10-15%。' },
+            environmentalStress: { name: '环境应激性繁殖障碍', summary: '环境应激通过神经内分泌途径影响繁殖性能。', concept: '• 热应激：降低采食量、胚胎死亡<br>• 光照不足：影响褪黑素分泌', keyMeasures: '• 夏季降温：湿帘风机、滴水降温<br>• 光照管理：每天16小时光照', productionMgmt: '• 温湿度实时监控报警<br>• 热应激预案（7-9月）', effect: '✅ 改善环境可降低繁殖障碍30-50%。' },
+            managementInfertility: { name: '管理性繁殖障碍', summary: '饲养管理不当是繁殖障碍的重要诱因。', concept: '• 发情鉴定：时间不准确、漏检<br>• 配种时机：过早或过晚影响受胎率', keyMeasures: '• 发情鉴定：每天2次，压背反射<br>• 配种时机：静立反射后12-24小时', productionMgmt: '• 配种记录完整可追溯<br>• 定期妊娠检查（B超）', effect: '✅ 规范管理可提高受胎率10-20%。' }
+        }
+    },
+    // 8. 妊娠猪健康管理
+    sowHealth: {
+        name: '🤰 妊娠猪健康管理', 
+        icon: 'fa-baby-carriage',
+        children: {
+            gestationFeeding: { name: '妊娠期饲养管理', summary: '妊娠期是胎儿发育的关键时期。', concept: '• 胚胎着床期：配种后0-30天<br>• 胎儿快速生长期：70-114天', keyMeasures: '• 分阶段精准饲喂：2.0-3.0kg/天<br>• 体况管理：维持3分体况', productionMgmt: '• 妊娠检查：配种后28-35天B超<br>• 转群管理：提前7天转入产房', effect: '✅ 规范妊娠管理可提高产仔数1-2头。' },
+            farrowingManagement: { name: '分娩期管理', summary: '分娩期是母猪和仔猪最脆弱的时期。', concept: '• 正常产程：2-5小时<br>• 难产识别：产程>6小时', keyMeasures: '• 产前准备：清洁消毒、预热保温箱<br>• 接产操作：擦干粘液、断脐', productionMgmt: '• 24小时值班接产<br>• 产程记录', effect: '✅ 规范分娩管理可降低死胎率50%。' },
+            postpartumCare: { name: '产后护理与疾病防控', summary: '产后是母猪泌乳和子宫恢复的关键期。', concept: '• 产后三联征：子宫内膜炎、乳房炎、无乳综合征', keyMeasures: '• 产后保健：抗生素+催产素+补液<br>• 子宫冲洗：产后48小时内', productionMgmt: '• 产后体温监测：连续3天<br>• 恶露观察', effect: '✅ 规范产后护理可降低MMA发病率50%。' }
+        }
+    },
+    // 9. 哺乳猪健康管理
+    pigletHealth: {
+        name: '🐷 哺乳猪健康管理', 
+        icon: 'fa-baby',
+        children: {
+            colostrumManagement: { name: '初乳管理', summary: '初乳是仔猪获得被动免疫的唯一来源。', concept: '• 初乳特点：产后24小时内，富含IgG<br>• 吸收窗口：出生后6小时内', keyMeasures: '• 初乳收集：产后1-2小时<br>• 人工灌服：弱小仔猪', productionMgmt: '• 确保每头仔猪6小时内吃足初乳<br>• 分批哺乳', effect: '✅ 规范初乳管理可提高仔猪成活率15-25%。' },
+            pigletDiarrhea: { name: '仔猪腹泻防控', summary: '仔猪腹泻是哺乳期最常见疾病。', concept: '• 病原分类：病毒性、细菌性、寄生虫<br>• 发病高峰：3-7日龄、14-21日龄', keyMeasures: '• 环境控制：保温32-34℃<br>• 母猪免疫：产前接种相关疫苗', productionMgmt: '• 腹泻仔猪隔离治疗<br>• 产房全进全出', effect: '✅ 综合防控可降低仔猪腹泻发病率60-80%。' },
+            ironSupplement: { name: '补铁与保健', summary: '仔猪出生时铁储备不足，及时补铁是关键。', concept: '• 铁储备：出生时体内铁约50mg<br>• 补铁时机：出生后2-3天', keyMeasures: '• 补铁剂量：150-200mg/头<br>• 补铁方式：颈部深部肌肉注射', productionMgmt: '• 建立补铁记录档案<br>• 针头更换：每头一针', effect: '✅ 规范补铁可预防缺铁性贫血，提高断奶重。' }
+        }
+    }
+};
+
+// 顶部导航：9个板块（顺序已调整）
+const topNav = [
+    { id: 'health', name: '健康管理', icon: 'fa-heartbeat' },
+    { id: 'veterinaryPractice', name: '兽医实践', icon: 'fa-stethoscope' },
+    { id: 'viral', name: '病毒性疾病', icon: 'fa-virus' },
+    { id: 'bacterial', name: '细菌性疾病', icon: 'fa-bacterium' },
+    { id: 'parasitic', name: '寄生虫疾病', icon: 'fa-bug' },
+    { id: 'healthDisease', name: '健康与疾病', icon: 'fa-notes-medical' },
+    { id: 'reproductiveDisorders', name: '繁殖障碍', icon: 'fa-exclamation-triangle' },
+    { id: 'sowHealth', name: '妊娠猪健康', icon: 'fa-baby-carriage' },
+    { id: 'pigletHealth', name: '哺乳猪健康', icon: 'fa-baby' }
+];
+
+let currentMain = 'health', currentSub = 'biosecurity';
+let pdfDoc = null, pageNum = 1, pageCount = 0;
+let fileCache = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderNav();
+    renderSidebar();
+    loadContent(currentMain, currentSub);
+    document.getElementById('mobileMenuBtn').onclick = () => document.getElementById('mobileMenu').classList.toggle('hidden');
+    document.getElementById('prevPageBtn').onclick = onPrev;
+    document.getElementById('nextPageBtn').onclick = onNext;
+});
+
+function renderNav() {
+    const nav = document.getElementById('navMenu');
+    const mobile = document.getElementById('mobileNavMenu');
+    const html = topNav.map((item, i) => `<a onclick="switchMain('${item.id}')" class="nav-item inline-block px-2 py-1 text-xs rounded ${i===0?'active':''}"><i class="fas ${item.icon} mr-0.5"></i> ${item.name}</a>`).join('');
+    nav.innerHTML = html;
+    mobile.innerHTML = topNav.map(item => `<a onclick="switchMain('${item.id}');document.getElementById('mobileMenu').classList.add('hidden');" class="nav-item block px-3 py-2 text-sm">${item.name}</a>`).join('');
+}
+
+function switchMain(mainId) {
+    currentMain = mainId;
+    const firstSub = Object.keys(diseaseData[mainId].children)[0];
+    currentSub = firstSub;
+    loadContent(currentMain, currentSub);
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    const idx = topNav.findIndex(i => i.id === mainId);
+    document.querySelectorAll('.nav-item')[idx]?.classList.add('active');
+    renderSidebar();
+}
+
+function renderSidebar() {
+    const sidebar = document.getElementById('sidebarMenu');
+    let html = '';
+    for (const [mainId, main] of Object.entries(diseaseData)) {
+        const active = mainId === currentMain;
+        html += `<div class="mb-0.5"><div class="main-menu-item px-2 py-1.5 flex justify-between items-center ${active?'active':''}" data-main="${mainId}"><div class="flex items-center gap-1.5"><i class="fas ${main.icon} text-blue-600 w-3 text-xs"></i><span class="font-medium text-sm">${main.name}</span></div><i class="fas fa-chevron-down text-slate-400 text-[10px] transition-transform ${active?'':'rotate-90'}"></i></div><div class="sub-menu-container pl-2 ${active?'':'hidden'}">`;
+        for (const [subId, sub] of Object.entries(main.children)) {
+            html += `<div class="sub-menu-item px-2 py-1 text-xs ${active && subId===currentSub?'active':''}" data-main="${mainId}" data-sub="${subId}"><i class="fas fa-book-open text-slate-400 w-3 text-[10px] mr-1.5"></i><span>${sub.name}</span></div>`;
+        }
+        html += `</div></div>`;
+    }
+    sidebar.innerHTML = html;
+    
+    document.querySelectorAll('.main-menu-item').forEach(el => {
+        el.onclick = (e) => { e.stopPropagation(); const sub = el.nextElementSibling; const icon = el.querySelector('.fa-chevron-down'); sub?.classList.toggle('hidden'); icon?.classList.toggle('rotate-90'); };
+    });
+    document.querySelectorAll('.sub-menu-item').forEach(el => {
+        el.onclick = () => { currentMain = el.dataset.main; currentSub = el.dataset.sub; loadContent(currentMain, currentSub); renderSidebar(); syncNav(); };
+    });
+}
+
+function syncNav() {
+    const idx = topNav.findIndex(i => i.id === currentMain);
+    document.querySelectorAll('.nav-item').forEach((el, i) => i===idx ? el.classList.add('active') : el.classList.remove('active'));
+}
+
+async function loadContent(mainId, subId) {
+    const category = diseaseData[mainId];
+    const item = category?.children[subId];
+    if (!item) return;
+    
+    document.getElementById('contentArea').innerHTML = `<div class="content-card p-8 text-center"><div class="loading-spinner mx-auto mb-3"></div><p class="text-slate-500">加载中...</p></div>`;
+    
+    let files = fileCache[`${mainId}/${subId}`];
+    if (!files) {
+        try {
+            const res = await fetch(`/get_files.php?category=${mainId}&disease=${subId}`);
+            const data = await res.json();
+            files = data.files || [];
+            fileCache[`${mainId}/${subId}`] = files;
+        } catch(e) { files = []; }
+    }
+    
+    // 专题板块（非病毒/细菌/寄生虫）使用5卡片结构
+    const isSpecialty = ['health', 'veterinaryPractice', 'healthDisease', 'reproductiveDisorders', 'sowHealth', 'pigletHealth'].includes(mainId);
+    
+    if (isSpecialty) {
+        document.getElementById('contentArea').innerHTML = `
+            <div class="content-card">
+                <div class="disease-header"><h2>${item.name}</h2></div>
+                <div class="core-summary"><p><i class="fas fa-lightbulb text-blue-600 mr-2"></i>${item.summary}</p></div>
+                <div class="info-grid">
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-book-open"></i> 概念与依据</div><div class="info-card-content">${item.concept}</div></div>
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-tasks"></i> 关键措施</div><div class="info-card-content">${item.keyMeasures}</div></div>
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-chart-line"></i> 生产管理应用</div><div class="info-card-content">${item.productionMgmt}</div></div>
+                    <div class="info-card eval-card"><div class="info-card-title"><i class="fas fa-chart-simple"></i> 效果评估与生产指导</div><div class="info-card-content">${item.effect}</div></div>
+                </div>
+                <div class="section-divider"></div>
+                <div class="p-4"><div class="doc-section-title"><i class="fas fa-file-alt text-blue-600 mr-2"></i>相关文档</div><div class="flex justify-between items-center mb-3"><span class="text-xs text-slate-500">共 ${files.length} 份资料</span></div><div class="file-grid" id="fileGrid">${files.map(f => `<div class="file-card" onclick="openPDF('${f.url}','${f.name.replace(/'/g,"\\'")}')"><div class="flex justify-between items-start"><i class="fas fa-file-pdf text-red-500 text-base"></i><span class="text-[10px] text-slate-400">${f.date||''}</span></div><div class="text-sm font-medium mt-1 truncate">${f.name}</div><div class="flex justify-between mt-1"><span class="text-[10px] text-slate-400">${f.size||''}</span><span class="btn-preview text-[10px]"><i class="fas fa-eye mr-0.5"></i>预览</span></div></div>`).join('')}</div></div>
+            </div>`;
+    } else {
+        document.getElementById('contentArea').innerHTML = `
+            <div class="content-card">
+                <div class="disease-header"><h2>${item.name}</h2></div>
+                <div class="core-summary"><p><i class="fas fa-lightbulb text-blue-600 mr-2"></i>${item.summary}</p></div>
+                <div class="info-grid">
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-globe-asia"></i> 流行病学</div><div class="info-card-content">${item.epi}</div></div>
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-dna"></i> 发病机理</div><div class="info-card-content">${item.path}</div></div>
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-syringe"></i> 治疗措施</div><div class="info-card-content">${item.treat}</div></div>
+                    <div class="info-card"><div class="info-card-title"><i class="fas fa-shield-virus"></i> 防控措施</div><div class="info-card-content">${item.control}</div></div>
+                </div>
+                <div class="px-4 pb-2"><div class="info-card eval-card"><div class="info-card-title"><i class="fas fa-chart-line"></i> 防控效果评估</div><div class="info-card-content">${item.evalEffect}</div></div></div>
+                <div class="section-divider"></div>
+                <div class="p-4"><div class="doc-section-title"><i class="fas fa-file-alt text-blue-600 mr-2"></i>相关文档</div><div class="flex justify-between items-center mb-3"><span class="text-xs text-slate-500">共 ${files.length} 份资料</span></div><div class="file-grid" id="fileGrid">${files.map(f => `<div class="file-card" onclick="openPDF('${f.url}','${f.name.replace(/'/g,"\\'")}')"><div class="flex justify-between items-start"><i class="fas fa-file-pdf text-red-500 text-base"></i><span class="text-[10px] text-slate-400">${f.date||''}</span></div><div class="text-sm font-medium mt-1 truncate">${f.name}</div><div class="flex justify-between mt-1"><span class="text-[10px] text-slate-400">${f.size||''}</span><span class="btn-preview text-[10px]"><i class="fas fa-eye mr-0.5"></i>预览</span></div></div>`).join('')}</div></div>
+            </div>`;
+    }
+}
+
+function openPDF(url, title) {
+    const modal = document.getElementById('previewModal');
+    document.getElementById('previewTitle').innerText = title;
+    document.getElementById('downloadBtn').href = url;
+    modal.style.display = 'flex';
+    loadPDF(url);
+}
+
+async function loadPDF(url) {
+    const canvas = document.getElementById('previewCanvas');
+    const info = document.getElementById('pageInfo');
+    const prev = document.getElementById('prevPageBtn');
+    const next = document.getElementById('nextPageBtn');
+    info.innerText = '加载中...'; prev.disabled = true; next.disabled = true;
+    try {
+        pdfDoc = await pdfjsLib.getDocument(url).promise;
+        pageCount = pdfDoc.numPages; pageNum = 1;
+        await renderPage(pageNum);
+        info.innerText = `第 1 / ${pageCount} 页`;
+        prev.disabled = true;
+        next.disabled = pageCount <= 1;
+    } catch(e) { closePreview(); }
+}
+
+async function renderPage(num) {
+    if (!pdfDoc) return;
+    const page = await pdfDoc.getPage(num);
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 1.2 });
+    canvas.height = viewport.height; canvas.width = viewport.width;
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    document.getElementById('pageInfo').innerText = `第 ${num} / ${pageCount} 页`;
+}
+
+function onPrev() { if (pdfDoc && pageNum > 1) { pageNum--; renderPage(pageNum); document.getElementById('prevPageBtn').disabled = pageNum<=1; document.getElementById('nextPageBtn').disabled=false; } }
+function onNext() { if (pdfDoc && pageNum < pageCount) { pageNum++; renderPage(pageNum); document.getElementById('prevPageBtn').disabled=false; document.getElementById('nextPageBtn').disabled=pageNum>=pageCount; } }
+function closePreview() { document.getElementById('previewModal').style.display = 'none'; pdfDoc = null; }
+</script>
+</body>
+</html>
