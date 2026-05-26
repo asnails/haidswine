@@ -19,7 +19,6 @@
             line-height: 1.4;
         }
 
-        /* 顶部导航栏 - 深蓝色底 + 白色文字 */
         .navbar {
             background: #1e4a76;
             padding: 14px 0;
@@ -74,7 +73,6 @@
             border-bottom: 2px solid #ffffff;
         }
 
-        /* 双栏布局：左侧2x2网格，右侧边栏 */
         .two-columns {
             display: flex;
             gap: 32px;
@@ -89,14 +87,12 @@
             flex: 1;
         }
 
-        /* 2x2 模块网格 */
         .modules-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
         }
 
-        /* 模块卡片 - 白底 */
         .module-card {
             background: #ffffff;
             border-radius: 16px;
@@ -117,7 +113,6 @@
             color: #1e4a76;
         }
 
-        /* 文章列表 - 单列显示 */
         .module-articles {
             display: flex;
             flex-direction: column;
@@ -137,13 +132,13 @@
             display: block;
             transition: 0.2s;
             line-height: 1.4;
+            cursor: pointer;
         }
 
         .article-link:hover {
             color: #3b82f6;
         }
 
-        /* 侧边栏卡片 */
         .sidebar-card {
             background: #ffffff;
             border-radius: 16px;
@@ -178,6 +173,7 @@
         .timeline-title, .hot-title {
             color: #2c3e50;
             text-decoration: none;
+            cursor: pointer;
         }
 
         .timeline-title:hover, .hot-title:hover {
@@ -191,6 +187,110 @@
             min-width: 22px;
         }
 
+        /* 文章详情页弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 32px;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #8ba3bc;
+            background: none;
+            border: none;
+        }
+        .modal-close:hover {
+            color: #1e4a76;
+        }
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e4a76;
+            margin-bottom: 12px;
+            padding-right: 30px;
+        }
+        .modal-meta {
+            font-size: 0.8rem;
+            color: #8ba3bc;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eef2f6;
+        }
+        .modal-body {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #334155;
+        }
+        /* 文章内容排版样式 */
+        .modal-body p {
+            margin-bottom: 1em;
+        }
+        .modal-body h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e4a76;
+            margin: 1.2em 0 0.6em 0;
+        }
+        .modal-body h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e4a76;
+            margin: 1em 0 0.5em 0;
+        }
+        .modal-body ul, .modal-body ol {
+            margin: 0.8em 0 0.8em 1.8em;
+        }
+        .modal-body li {
+            margin: 0.3em 0;
+        }
+        .modal-body strong {
+            color: #1e4a76;
+        }
+        .modal-body hr {
+            margin: 1.2em 0;
+            border: none;
+            border-top: 1px solid #eef2f6;
+        }
+        .modal-body blockquote {
+            border-left: 3px solid #1e4a76;
+            padding-left: 16px;
+            color: #5c7c8f;
+            margin: 1em 0;
+        }
+
         footer {
             background: #e9f0f7;
             border-radius: 20px 20px 0 0;
@@ -199,6 +299,12 @@
             color: #4a7a9e;
             font-size: 0.75rem;
             margin-top: 20px;
+        }
+
+        .loading-text {
+            text-align: center;
+            padding: 40px;
+            color: #8ba3bc;
         }
 
         @media (max-width: 900px) {
@@ -215,12 +321,17 @@
             .nav-links {
                 gap: 16px;
             }
+            .modal-content {
+                padding: 20px;
+            }
+            .modal-title {
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- 深蓝色导航栏 -->
 <div class="navbar">
     <div class="container nav-flex">
         <div class="logo">
@@ -238,44 +349,26 @@
 </div>
 
 <div class="container two-columns">
-    <!-- 左侧主内容区：2x2 模块网格 -->
     <div class="main-content">
         <div class="modules-grid">
-            <!-- 模块1：生产管理 -->
             <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title">📋 生产管理</div>
-                </div>
-                <div class="module-articles" id="production-list"></div>
+                <div class="module-header"><div class="module-title">📋 生产管理</div></div>
+                <div class="module-articles" id="production-list"><div class="loading-text">加载中...</div></div>
             </div>
-
-            <!-- 模块2：猪群健康 -->
             <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title">🩺 猪群健康</div>
-                </div>
-                <div class="module-articles" id="health-list"></div>
+                <div class="module-header"><div class="module-title">🩺 猪群健康</div></div>
+                <div class="module-articles" id="health-list"><div class="loading-text">加载中...</div></div>
             </div>
-
-            <!-- 模块3：批次化生产 -->
             <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title">📅 批次化生产</div>
-                </div>
-                <div class="module-articles" id="batch-list"></div>
+                <div class="module-header"><div class="module-title">📅 批次化生产</div></div>
+                <div class="module-articles" id="batch-list"><div class="loading-text">加载中...</div></div>
             </div>
-
-            <!-- 模块4：管理思路 -->
             <div class="module-card">
-                <div class="module-header">
-                    <div class="module-title">💡 管理思路</div>
-                </div>
-                <div class="module-articles" id="management-list"></div>
+                <div class="module-header"><div class="module-title">💡 管理思路</div></div>
+                <div class="module-articles" id="management-list"><div class="loading-text">加载中...</div></div>
             </div>
         </div>
     </div>
-
-    <!-- 右侧边栏 -->
     <div class="sidebar">
         <div class="sidebar-card">
             <div class="sidebar-title">🔥 热点文章</div>
@@ -292,57 +385,23 @@
     <p>© 2025 牧知汇 · 猪群健康管理 | 提高繁殖效率，成为国内顶尖5%猪场</p>
 </footer>
 
+<!-- 文章详情弹窗 -->
+<div id="articleModal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-meta" id="modalMeta"></div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
 <script>
-    // ==================== 文章数据 ====================
-    const articlesData = {
-        production: [
-            "9000头规模母猪场生产节律设计",
-            "全进全出模式下的产房周转率提升方案",
-            "母猪非生产天数(NPD)控制与考核体系",
-            "配怀舍精细化饲喂管理流程",
-            "哺乳母猪采食量提升关键技术",
-            "断奶仔猪过渡期护理SOP",
-            "猪场周工作流程标准化模板",
-            "后备母猪驯化与入群管理",
-            "公猪站运营与精液质量控制",
-            "生产数据采集与分析体系搭建"
-        ],
-        health: [
-            "蓝耳病双阴性场维持策略",
-            "非洲猪瘟生物安全分级管理",
-            "猪流行性腹泻(PED)免疫程序优化",
-            "支原体肺炎净化方案与评估",
-            "猪群健康监测哨兵猪制度",
-            "精准用药与抗生素减量技术",
-            "口腔液检测在疾病早期预警中的应用",
-            "免疫抑制病的鉴别诊断",
-            "环境丰容与猪只行为健康",
-            "猪场健康评估评分卡设计"
-        ],
-        batch: [
-            "18天批次生产模式详解与优势分析",
-            "烯丙孕素在批次化生产中的精准应用",
-            "定时输精技术操作要点",
-            "不同批次模式对比：1周批/3周批/4周批",
-            "批次化生产下产房利用率计算",
-            "返情母猪与批次衔接处理方案",
-            "激素方案的季节调整策略",
-            "批次化生产对人工效率的影响",
-            "从连续流转向批次化的改造要点",
-            "批次化生产中的断奶日龄优化"
-        ],
-        management: [
-            "秦英林：养猪虽传统，但值得深耕",
-            "猪周期低谷期的降本核心逻辑",
-            "人效驱动：1人管理300头母猪的激励设计",
-            "PSY从24到30的路径拆解",
-            "数据化决策在猪场管理中的应用",
-            "极限成本控制：240元断奶成本模型",
-            "规模化猪场的组织架构优化",
-            "从生产指标到经营利润的转化",
-            "新建猪场满负荷生产爬坡计划",
-            "猪场环保与粪污资源化利用思路"
-        ]
+    // ==================== 配置 ====================
+    const CATEGORY_MAPPING = {
+        '生产管理': 'production',
+        '猪群健康': 'health',
+        '批次化生产': 'batch',
+        '管理思路': 'management'
     };
 
     const hotArticles = [
@@ -358,57 +417,184 @@
         { date: "05/26", title: "猪群健康模块内容更新" },
         { date: "05/25", title: "生产管理模块优化排版" },
         { date: "05/24", title: "管理思路模块新增行业观点" },
-        { date: "05/23", title: "网站整体改版为2x2网格+单列文章" },
-        { date: "05/22", title: "修复移动端显示问题" },
-        { date: "05/21", title: "新增热点文章侧边栏" }
+        { date: "05/23", title: "网站整体改版" }
     ];
 
-    // 渲染模块：单列显示
+    let articlesData = {
+        production: [],
+        health: [],
+        batch: [],
+        management: []
+    };
+
+    // ==================== 内容格式化函数 ====================
+    /**
+     * 将纯文本内容自动转换为格式化的 HTML
+     * 支持：段落自动分段、标题识别、列表识别、强调文本
+     */
+    function formatContentToHTML(content) {
+        if (!content || content.trim() === '') {
+            return '<p style="color: #8ba3bc;">暂无详细内容</p>';
+        }
+        
+        let text = content.trim();
+        
+        // 1. 处理标题行（以 # 或 ## 开头的行）
+        text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        text = text.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+        
+        // 2. 处理无序列表（以 - 或 * 开头的行）
+        text = text.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+        // 将连续的列表项包裹在 <ul> 中
+        text = text.replace(/(<li>.*<\/li>\n?)+/g, function(match) {
+            return '<ul>' + match + '</ul>';
+        });
+        
+        // 3. 处理有序列表（以 1. 2. 等开头的行）
+        text = text.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+        // 将连续的有序列表项包裹在 <ol> 中
+        text = text.replace(/(<li>.*<\/li>\n?)+/g, function(match) {
+            // 避免重复包裹（如果已经是无序列表）
+            if (!match.includes('<ul>')) {
+                return '<ol>' + match + '</ol>';
+            }
+            return match;
+        });
+        
+        // 4. 处理粗体（**文字**）
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // 5. 处理斜体（*文字*）
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // 6. 处理水平分割线（---）
+        text = text.replace(/^---$/gm, '<hr>');
+        
+        // 7. 处理引用块（> 开头的行）
+        text = text.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+        
+        // 8. 将普通文本转换为段落（按空行分割）
+        let paragraphs = text.split(/\n\s*\n/);
+        let formattedParagraphs = [];
+        
+        for (let para of paragraphs) {
+            para = para.trim();
+            if (para === '') continue;
+            
+            // 如果已经是 HTML 标签包裹的内容，直接保留
+            if (para.startsWith('<h2>') || para.startsWith('<h3>') || 
+                para.startsWith('<ul>') || para.startsWith('<ol>') || 
+                para.startsWith('<li>') || para.startsWith('<hr>') ||
+                para.startsWith('<blockquote>')) {
+                formattedParagraphs.push(para);
+            } else {
+                // 普通文本，转换为段落，并处理换行符
+                let inlinePara = para.replace(/\n/g, '<br>');
+                formattedParagraphs.push(`<p>${inlinePara}</p>`);
+            }
+        }
+        
+        let html = formattedParagraphs.join('\n');
+        
+        // 9. 清理多余的嵌套
+        html = html.replace(/<ul>(\s*<ul>)+/g, '<ul>');
+        html = html.replace(/<\/ul>\s*<\/ul>/g, '</ul>');
+        html = html.replace(/<ol>(\s*<ol>)+/g, '<ol>');
+        html = html.replace(/<\/ol>\s*<\/ol>/g, '</ol>');
+        
+        return html;
+    }
+
+    // ==================== 数据加载 ====================
+    async function loadArticlesFromJSON() {
+        try {
+            const response = await fetch('articles.json?v=' + Date.now());
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            
+            if (!Array.isArray(data)) throw new Error('数据格式错误');
+            
+            articlesData = { production: [], health: [], batch: [], management: [] };
+            
+            data.forEach(item => {
+                const category = CATEGORY_MAPPING[item.type];
+                if (category && item.title) {
+                    articlesData[category].push({
+                        title: item.title,
+                        content: item.content || ''
+                    });
+                }
+            });
+            
+            renderAll();
+        } catch (error) {
+            console.error('加载失败:', error);
+            useDefaultData();
+        }
+    }
+    
+    function useDefaultData() {
+        articlesData = {
+            production: [
+                { title: "6000头规模母猪场生产节律设计", content: "生产节律设计是规模化猪场高效运转的核心。本指南详细说明配种、分娩、断奶等环节的时间安排。" }
+            ],
+            health: [
+                { title: "蓝耳病双阴性场维持策略", content: "蓝耳病双阴性场的维持需要严格的生物安全措施和监测计划。" }
+            ],
+            batch: [
+                { title: "18天批次生产模式详解与优势分析", content: "18天批次模式的优势在于提高栏舍利用率和人工效率。" }
+            ],
+            management: [
+                { title: "秦英林：养猪虽传统，但值得深耕", content: "养猪行业虽然传统，但通过技术创新仍有巨大发展空间。" }
+            ]
+        };
+        renderAll();
+    }
+    
+    // ==================== 渲染函数 ====================
     function renderModule(moduleId, articles) {
         const container = document.getElementById(`${moduleId}-list`);
         if (!container) return;
+        
+        if (articles.length === 0) {
+            container.innerHTML = '<div style="color: #8ba3bc; text-align: center; padding: 20px;">暂无文章</div>';
+            return;
+        }
+        
         let html = '';
-        articles.forEach(title => {
+        articles.forEach((article, idx) => {
+            const safeTitle = article.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
             html += `
                 <div class="article-item">
-                    <a href="#" class="article-link" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>
+                    <a class="article-link" data-title="${safeTitle}" data-index="${idx}" data-module="${moduleId}">${escapeHtml(article.title)}</a>
                 </div>
             `;
         });
         container.innerHTML = html;
     }
-
+    
     function renderHotArticles() {
         const container = document.getElementById('hot-list');
         if (!container) return;
         let html = '';
         hotArticles.forEach((title, index) => {
-            html += `
-                <div class="hot-item">
-                    <span class="rank">${index + 1}</span>
-                    <a href="#" class="hot-title" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>
-                </div>
-            `;
+            html += `<div class="hot-item"><span class="rank">${index + 1}</span><a class="hot-title" data-title="${escapeHtml(title)}">${escapeHtml(title)}</a></div>`;
         });
         container.innerHTML = html;
     }
-
+    
     function renderTimeline() {
         const container = document.getElementById('timeline-list');
         if (!container) return;
         let html = '';
         timelineData.forEach(item => {
-            html += `
-                <div class="timeline-item">
-                    <span class="timeline-date">${item.date}</span>
-                    <a href="#" class="timeline-title" data-title="${item.title.replace(/"/g, '&quot;')}">${item.title}</a>
-                </div>
-            `;
+            html += `<div class="timeline-item"><span class="timeline-date">${item.date}</span><a class="timeline-title" data-title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a></div>`;
         });
         container.innerHTML = html;
     }
-
-    function initModules() {
+    
+    function renderAll() {
         renderModule('production', articlesData.production);
         renderModule('health', articlesData.health);
         renderModule('batch', articlesData.batch);
@@ -416,20 +602,162 @@
         renderHotArticles();
         renderTimeline();
     }
-
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ==================== 弹窗显示文章详情 ====================
+    function openArticle(title, moduleId, index) {
+        const articles = articlesData[moduleId];
+        const article = articles && articles[index] ? articles[index] : null;
+        
+        if (!article) {
+            alert('文章内容加载失败');
+            return;
+        }
+        
+        const modal = document.getElementById('articleModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMeta = document.getElementById('modalMeta');
+        const modalBody = document.getElementById('modalBody');
+        
+        modalTitle.textContent = article.title;
+        
+        // 获取分类中文名
+        const categoryName = Object.keys(CATEGORY_MAPPING).find(key => CATEGORY_MAPPING[key] === moduleId) || '技术文章';
+        const today = new Date().toLocaleDateString('zh-CN');
+        modalMeta.textContent = `${categoryName} | 更新于 ${today}`;
+        
+        // 使用格式化函数处理内容
+        const formattedContent = formatContentToHTML(article.content);
+        modalBody.innerHTML = formattedContent;
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModal() {
+        const modal = document.getElementById('articleModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    // ==================== 事件绑定 ====================
     function bindArticleClick() {
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('article-link') || 
-                e.target.classList.contains('hot-title') || 
-                e.target.classList.contains('timeline-title')) {
+            const target = e.target;
+            
+            // 主页文章链接
+            if (target.classList.contains('article-link')) {
                 e.preventDefault();
-                const title = e.target.getAttribute('data-title') || e.target.textContent;
-                alert(`📄 文章详情页\n\n“${title}”\n\n详情页功能即将上线，敬请期待！`);
+                const title = target.getAttribute('data-title');
+                const moduleId = target.getAttribute('data-module');
+                const index = parseInt(target.getAttribute('data-index'));
+                openArticle(title, moduleId, index);
+                return;
+            }
+            
+            // 热点文章链接
+            if (target.classList.contains('hot-title')) {
+                e.preventDefault();
+                const title = target.textContent;
+                // 在热点文章中查找，从所有模块中搜索
+                for (const [moduleId, articles] of Object.entries(articlesData)) {
+                    const foundIndex = articles.findIndex(a => a.title === title);
+                    if (foundIndex !== -1) {
+                        openArticle(title, moduleId, foundIndex);
+                        return;
+                    }
+                }
+                alert(`📄 文章详情页\n\n“${title}”\n\n详情页功能正在建设中，敬请期待！`);
+                return;
+            }
+            
+            // 时间轴链接
+            if (target.classList.contains('timeline-title')) {
+                e.preventDefault();
+                const title = target.textContent;
+                alert(`📄 更新内容\n\n“${title}”\n\n详情页功能正在建设中，敬请期待！`);
             }
         });
     }
-
-    initModules();
+    
+    // 点击遮罩层关闭弹窗
+    document.getElementById('articleModal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('articleModal')) {
+            closeModal();
+        }
+    });
+    
+    // 按 ESC 键关闭弹窗
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+    
+    // 为文章链接添加 data-module 和 data-index 属性（需要在渲染后绑定）
+    function enrichArticleLinks() {
+        for (const [moduleId, articles] of Object.entries(articlesData)) {
+            const container = document.getElementById(`${moduleId}-list`);
+            if (container) {
+                const links = container.querySelectorAll('.article-link');
+                links.forEach((link, idx) => {
+                    link.setAttribute('data-module', moduleId);
+                    link.setAttribute('data-index', idx);
+                });
+            }
+        }
+    }
+    
+    // 修改渲染函数，添加索引
+    const originalRenderModule = renderModule;
+    window.renderModule = function(moduleId, articles) {
+        const container = document.getElementById(`${moduleId}-list`);
+        if (!container) return;
+        
+        if (articles.length === 0) {
+            container.innerHTML = '<div style="color: #8ba3bc; text-align: center; padding: 20px;">暂无文章</div>';
+            return;
+        }
+        
+        let html = '';
+        articles.forEach((article, idx) => {
+            const safeTitle = article.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            html += `
+                <div class="article-item">
+                    <a class="article-link" data-title="${safeTitle}" data-module="${moduleId}" data-index="${idx}">${escapeHtml(article.title)}</a>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    };
+    
+    // 覆盖渲染函数
+    renderModule = window.renderModule;
+    
+    // 重新实现 renderAll 使用新的渲染函数
+    const newRenderAll = function() {
+        renderModule('production', articlesData.production);
+        renderModule('health', articlesData.health);
+        renderModule('batch', articlesData.batch);
+        renderModule('management', articlesData.management);
+        renderHotArticles();
+        renderTimeline();
+    };
+    
+    // 替换
+    window.renderAll = newRenderAll;
+    
+    // 初始化
+    loadArticlesFromJSON();
     bindArticleClick();
 </script>
 </body>
