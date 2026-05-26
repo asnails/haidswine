@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>牧知汇 - 猪群健康管理</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -19,17 +19,20 @@
             line-height: 1.5;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 24px;
+        /* 顶部导航栏 - 深蓝色底 + 白色文字 */
+        .navbar {
+            background: #1e4a76;
+            border-bottom: none;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        /* 导航栏 */
-        .navbar {
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 20px 0;
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
         }
 
         .nav-flex {
@@ -41,133 +44,166 @@
         }
 
         .logo h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #1e4a76;
+            color: #ffffff;
         }
 
         .logo p {
-            font-size: 0.75rem;
-            color: #5c7c8f;
-            margin-top: 2px;
+            font-size: 0.7rem;
+            color: #bcd0e4;
         }
 
         .nav-links {
             display: flex;
             gap: 28px;
+            flex-wrap: wrap;
         }
 
         .nav-links a {
             text-decoration: none;
             font-weight: 500;
-            color: #2c5a7a;
+            color: #ffffff;
             font-size: 0.9rem;
+            padding: 6px 0;
+            opacity: 0.85;
+            transition: 0.2s;
         }
 
         .nav-links a:hover {
-            color: #3b82f6;
+            opacity: 1;
+            border-bottom: 2px solid #ffffff;
         }
 
-        /* 横幅 - 高度自适应内容 */
-        .hero {
-            background: #eef3fc;
-            border-radius: 24px;
-            margin: 32px 0 40px;
-            padding: 32px 36px;
-        }
-
-        .hero h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1e4a76;
-            margin-bottom: 12px;
-        }
-
-        .hero .accent {
-            color: #3b82f6;
-        }
-
-        .hero p {
-            font-size: 1rem;
-            color: #3a6b8c;
-            margin-bottom: 20px;
-        }
-
-        .hero-stats {
+        /* 双栏布局 */
+        .two-columns {
             display: flex;
-            gap: 20px;
+            gap: 40px;
+            margin: 32px 0;
+        }
+
+        .main-content {
+            flex: 3;
+        }
+
+        .sidebar {
+            flex: 1;
+        }
+
+        /* 模块卡片 - 白底 */
+        .module-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            border: 1px solid #e2edf2;
+        }
+
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8eef3;
         }
 
-        .stat-badge {
-            background: white;
-            padding: 4px 14px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #1e5a8a;
-        }
-
-        /* 文章区域标题 */
-        .section-header {
-            margin: 24px 0 20px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .section-header h3 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1e4a76;
-        }
-
-        /* 文章列表 - 上下排列 */
-        .articles-list {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            margin-bottom: 60px;
-        }
-
-        .article-item {
-            background: white;
-            border-radius: 20px;
-            padding: 24px 28px;
-            border: 1px solid #e4edf5;
-            transition: all 0.2s ease;
-        }
-
-        .article-item:hover {
-            border-color: #c5d9f0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-        }
-
-        .article-type {
-            display: inline-block;
-            background: #eef3fc;
-            color: #2c6a9e;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 3px 12px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-        }
-
-        .article-title {
+        .module-title {
             font-size: 1.25rem;
             font-weight: 700;
-            color: #1a3a5c;
-            margin-bottom: 12px;
+            color: #1e4a76;
         }
 
-        .article-content {
-            color: #4c6a82;
+        .module-date {
+            font-size: 0.7rem;
+            color: #8ba3bc;
+        }
+
+        /* 文章列表 - 黑字 */
+        .module-articles {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-row {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .article-category {
+            background: #eef3fc;
+            color: #2c6a9e;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .article-link {
             font-size: 0.9rem;
-            line-height: 1.6;
+            font-weight: 500;
+            color: #1a2c3e;
+            text-decoration: none;
+            transition: 0.2s;
         }
 
-        .article-content p {
-            margin-bottom: 6px;
+        .article-link:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        /* 侧边栏卡片 - 白底 */
+        .sidebar-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #e2edf2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e4a76;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8eef3;
+            margin-bottom: 16px;
+        }
+
+        .timeline-item, .hot-item {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f4f9;
+            font-size: 0.85rem;
+        }
+
+        .timeline-date {
+            color: #8ba3bc;
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .timeline-title, .hot-title {
+            color: #1a2c3e;
+            text-decoration: none;
+        }
+
+        .timeline-title:hover, .hot-title:hover {
+            color: #3b82f6;
+        }
+
+        .hot-item .rank {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.8rem;
         }
 
         /* 底部 */
@@ -178,20 +214,15 @@
             text-align: center;
             color: #4a7a9e;
             font-size: 0.8rem;
+            margin-top: 20px;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 900px) {
+            .two-columns {
+                flex-direction: column;
+            }
             .container {
                 padding: 0 16px;
-            }
-            .hero {
-                padding: 24px 20px;
-            }
-            .hero h2 {
-                font-size: 1.4rem;
-            }
-            .article-item {
-                padding: 18px 20px;
             }
             .nav-links {
                 gap: 16px;
@@ -201,6 +232,7 @@
 </head>
 <body>
 
+<!-- 深蓝色导航栏 -->
 <div class="navbar">
     <div class="container nav-flex">
         <div class="logo">
@@ -209,31 +241,64 @@
         </div>
         <div class="nav-links">
             <a href="#">首页</a>
-            <a href="#">健康管理</a>
-            <a href="#">繁殖效率</a>
-            <a href="#">猪场智库</a>
+            <a href="#">生产管理</a>
+            <a href="#">猪群健康</a>
+            <a href="#">批次化生产</a>
+            <a href="#">管理思路</a>
         </div>
     </div>
 </div>
 
-<div class="container">
-    <!-- 横幅 - 高度由内容撑开 -->
-    <div class="hero">
-        <h2>牧知汇 · <span class="accent">智领健康繁育</span></h2>
-        <p>猪群健康管理 · 提高繁殖效率 · 成为国内顶尖的5%猪场</p>
-        <div class="hero-stats">
-            <span class="stat-badge">PSY+26%</span>
-            <span class="stat-badge">健康指数领先</span>
-            <span class="stat-badge">目标 top5%</span>
+<div class="container two-columns">
+    <!-- 左侧主内容区 -->
+    <div class="main-content">
+        <!-- 模块1：生产管理 -->
+        <div class="module-card">
+            <div class="module-header">
+                <span class="module-title">📋 生产管理</span>
+                <span class="module-date">2026年05月27日</span>
+            </div>
+            <div class="module-articles" id="production-list"></div>
+        </div>
+
+        <!-- 模块2：猪群健康 -->
+        <div class="module-card">
+            <div class="module-header">
+                <span class="module-title">🩺 猪群健康</span>
+                <span class="module-date">2026年05月27日</span>
+            </div>
+            <div class="module-articles" id="health-list"></div>
+        </div>
+
+        <!-- 模块3：批次化生产 -->
+        <div class="module-card">
+            <div class="module-header">
+                <span class="module-title">📅 批次化生产</span>
+                <span class="module-date">2026年05月27日</span>
+            </div>
+            <div class="module-articles" id="batch-list"></div>
+        </div>
+
+        <!-- 模块4：管理思路 -->
+        <div class="module-card">
+            <div class="module-header">
+                <span class="module-title">💡 管理思路</span>
+                <span class="module-date">2026年05月27日</span>
+            </div>
+            <div class="module-articles" id="management-list"></div>
         </div>
     </div>
 
-    <!-- 文章区域 -->
-    <div class="section-header">
-        <h3>前沿知识 · 实战分享</h3>
-    </div>
-    <div id="articlesList" class="articles-list">
-        <div style="text-align:center; padding: 40px; color: #7c9cbb;">加载文章中...</div>
+    <!-- 右侧边栏 -->
+    <div class="sidebar">
+        <div class="sidebar-card">
+            <div class="sidebar-title">🔥 热点文章</div>
+            <div id="hot-list"></div>
+        </div>
+        <div class="sidebar-card">
+            <div class="sidebar-title">📅 时间轴</div>
+            <div id="timeline-list"></div>
+        </div>
     </div>
 </div>
 
@@ -242,70 +307,144 @@
 </footer>
 
 <script>
-    let articles = [];
+    // ==================== 文章数据 ====================
+    const articlesData = {
+        production: [
+            "6000头规模母猪场生产节律设计",
+            "全进全出模式下的产房周转率提升方案",
+            "母猪非生产天数(NPD)控制与考核体系",
+            "配怀舍精细化饲喂管理流程",
+            "哺乳母猪采食量提升关键技术",
+            "断奶仔猪过渡期护理SOP",
+            "猪场周工作流程标准化模板",
+            "后备母猪驯化与入群管理",
+            "公猪站运营与精液质量控制",
+            "生产数据采集与分析体系搭建"
+        ],
+        health: [
+            "蓝耳病双阴性场维持策略",
+            "非洲猪瘟生物安全分级管理",
+            "猪流行性腹泻(PED)免疫程序优化",
+            "支原体肺炎净化方案与评估",
+            "猪群健康监测哨兵猪制度",
+            "精准用药与抗生素减量技术",
+            "口腔液检测在疾病早期预警中的应用",
+            "免疫抑制病的鉴别诊断",
+            "环境丰容与猪只行为健康",
+            "猪场健康评估评分卡设计"
+        ],
+        batch: [
+            "18天批次生产模式详解与优势分析",
+            "烯丙孕素在批次化生产中的精准应用",
+            "定时输精技术操作要点",
+            "不同批次模式对比：1周批/3周批/4周批",
+            "批次化生产下产房利用率计算",
+            "返情母猪与批次衔接处理方案",
+            "激素方案的季节调整策略",
+            "批次化生产对人工效率的影响",
+            "从连续流转向批次化的改造要点",
+            "批次化生产中的断奶日龄优化"
+        ],
+        management: [
+            "秦英林：养猪虽传统，但值得深耕",
+            "猪周期低谷期的降本核心逻辑",
+            "人效驱动：1人管理300头母猪的激励设计",
+            "PSY从24到30的路径拆解",
+            "数据化决策在猪场管理中的应用",
+            "极限成本控制：240元断奶成本模型",
+            "规模化猪场的组织架构优化",
+            "从生产指标到经营利润的转化",
+            "新建猪场满负荷生产爬坡计划",
+            "猪场环保与粪污资源化利用思路"
+        ]
+    };
 
-    async function fetchArticles() {
-        try {
-            const response = await fetch('articles.json?v=' + Date.now());
-            if (response.ok) {
-                const data = await response.json();
-                if (Array.isArray(data)) {
-                    articles = data;
-                } else if (data.articles && Array.isArray(data.articles)) {
-                    articles = data.articles;
-                } else {
-                    useDefaultArticles();
-                }
-            } else {
-                useDefaultArticles();
-            }
-        } catch (e) {
-            useDefaultArticles();
-        }
-        renderArticles();
-    }
+    const hotArticles = [
+        "18天批次生产模式详解与优势分析",
+        "蓝耳病双阴性场维持策略",
+        "秦英林：养猪虽传统，但值得深耕",
+        "PSY从24到30的路径拆解",
+        "母猪非生产天数(NPD)控制与考核体系"
+    ];
 
-    function useDefaultArticles() {
-        articles = [
-            { type: "繁殖效率", title: "批次化生产提高母猪年产断奶仔数", content: "通过优化批次间隔与同步发情技术，结合智能化饲喂站，PSY从24.5提升至28.2，跻身顶尖水平。" },
-            { type: "健康管理", title: "蓝耳病净化与群体免疫力提升方案", content: "基于封闭式管理及疫苗免疫评估，母猪流产率下降62%，仔猪存活率提升至95%以上。" },
-            { type: "生产技术", title: "智能化环控与猪群舒适度指数", content: "环境监测技术通过传感器联动风机，每头母猪年治疗成本降低40元，大幅提高生产效率。" },
-            { type: "猪场运营", title: "数据决策平台：繁殖效率仪表盘", content: "构建繁殖KPI实时看板，分析配种分娩率、非生产天数等关键指标，年度母猪年提供断奶仔猪数增加2.3头。" }
-        ];
-    }
+    const timelineData = [
+        { date: "05/27", title: "批次化生产模块新增10篇文章" },
+        { date: "05/26", title: "猪群健康模块内容更新" },
+        { date: "05/25", title: "生产管理模块优化排版" },
+        { date: "05/24", title: "管理思路模块新增行业观点" },
+        { date: "05/23", title: "网站整体改版为双栏布局" },
+        { date: "05/22", title: "修复移动端显示问题" },
+        { date: "05/21", title: "新增热点文章侧边栏" }
+    ];
 
-    function renderArticles() {
-        const container = document.getElementById('articlesList');
-        if (!articles.length) {
-            container.innerHTML = '<div style="text-align:center; padding: 40px; color: #7c9cbb;">暂无文章</div>';
-            return;
-        }
+    function renderModule(moduleId, articles, categoryName) {
+        const container = document.getElementById(`${moduleId}-list`);
+        if (!container) return;
         let html = '';
-        articles.forEach(article => {
+        articles.forEach(title => {
             html += `
-                <div class="article-item">
-                    <div class="article-type">${escapeHtml(article.type)}</div>
-                    <div class="article-title">${escapeHtml(article.title)}</div>
-                    <div class="article-content">
-                        <p>${escapeHtml(article.content)}</p>
-                    </div>
+                <div class="article-row">
+                    <span class="article-category">${categoryName}</span>
+                    <a href="#" class="article-link" data-category="${categoryName}" data-title="${title}">${title}</a>
                 </div>
             `;
         });
         container.innerHTML = html;
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
+    function renderHotArticles() {
+        const container = document.getElementById('hot-list');
+        if (!container) return;
+        let html = '';
+        hotArticles.forEach((title, index) => {
+            html += `
+                <div class="hot-item">
+                    <span class="rank">${index + 1}</span>
+                    <a href="#" class="hot-title" data-title="${title}">${title}</a>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function renderTimeline() {
+        const container = document.getElementById('timeline-list');
+        if (!container) return;
+        let html = '';
+        timelineData.forEach(item => {
+            html += `
+                <div class="timeline-item">
+                    <span class="timeline-date">${item.date}</span>
+                    <a href="#" class="timeline-title" data-title="${item.title}">${item.title}</a>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    function initModules() {
+        renderModule('production', articlesData.production, '生产管理');
+        renderModule('health', articlesData.health, '猪群健康');
+        renderModule('batch', articlesData.batch, '批次化生产');
+        renderModule('management', articlesData.management, '管理思路');
+        renderHotArticles();
+        renderTimeline();
+    }
+
+    function bindArticleClick() {
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('article-link') || 
+                e.target.classList.contains('hot-title') || 
+                e.target.classList.contains('timeline-title')) {
+                e.preventDefault();
+                const title = e.target.getAttribute('data-title') || e.target.textContent;
+                alert(`📄 文章详情页\n\n“${title}”\n\n详情页功能即将上线，敬请期待！`);
+            }
         });
     }
 
-    fetchArticles();
+    initModules();
+    bindArticleClick();
 </script>
 </body>
 </html>
