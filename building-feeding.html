@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>现代化智能种猪场 | 技术知识库</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        /* 导航栏样式 */
+        .nav-item {
+            position: relative;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+        
+        .nav-item.active {
+            background: #059669;
+            color: white;
+        }
+        
+        /* 卡片样式 */
+        .section-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 2rem;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+        
+        .section-content {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        /* 文件卡片 */
+        .file-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .file-card:hover {
+            background: white;
+            border-color: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        /* PDF 预览弹窗 */
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-toolbar {
+            background: #1f2937;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .preview-container {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        
+        .preview-canvas {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            background: white;
+        }
+        
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #10b981;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-preview {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            transition: background 0.2s;
+        }
+        
+        .btn-preview:hover {
+            background: #059669;
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* 分割线 */
+        .divider {
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #34d399, #059669, #10b981);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航栏 -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-r from-emerald-600 to-green-500 text-white w-10 h-10 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-microchip text-xl"></i>
+                </div>
+                <span class="text-xl font-bold bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">
+                    现代化智能种猪场知识库
+                </span>
+            </div>
+            <div class="hidden md:flex space-x-2" id="navMenu"></div>
+            <button id="mobileMenuBtn" class="md:hidden text-gray-600 text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+    <div id="mobileMenu" class="hidden md:hidden bg-white border-t shadow-lg">
+        <div class="flex flex-col p-4 space-y-2" id="mobileNavMenu"></div>
+    </div>
+</nav>
+
+<!-- 主内容 -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="contentArea"></div>
+</main>
+
+<!-- PDF 预览弹窗 -->
+<div id="previewModal" class="preview-modal" style="display: none;">
+    <div class="preview-toolbar">
+        <div class="flex items-center space-x-4">
+            <button onclick="closePreview()" class="text-white hover:text-green-400 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <span id="previewTitle" class="font-medium truncate max-w-md"></span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="prevPageBtn" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded disabled:opacity-50" disabled>
+                <i class="fas fa-chevron-left"></i> 上一页
+            </button>
+            <span id="pageInfo" class="text-sm">加载中...</span>
+            <button id="nextPageBtn" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded disabled:opacity-50" disabled>
+                下一页 <i class="fas fa-chevron-right"></i>
+            </button>
+            <a id="downloadBtn" href="#" download class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded text-sm transition">
+                <i class="fas fa-download"></i> 下载
+            </a>
+        </div>
+    </div>
+    <div id="previewContainer" class="preview-container">
+        <canvas id="previewCanvas" class="preview-canvas"></canvas>
+    </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.php';
+
+// ========== 配置：文档根目录 ==========
+const DOCS_BASE_PATH = 'nutritionfolder';
+
+// ========== 分类配置（四个板块） ==========
+const categories = [
+    {
+        id: 'loufang',
+        name: '🏭 楼房猪场',
+        icon: 'fa-building',
+        desc: `<p class="mb-3">楼房猪场是土地集约与生物安全升级的终极形态。通过"网格化物理熔断设计"与"全空气过滤系统"，破解了超大规模养殖在三维空间中的气溶胶传播难题。垂直结构实现功能分区（配怀、分娩、保育、育肥），配合自动化垂直物流通道，极大降低了人猪接触频率与交叉感染风险。</p>
+        <p>相较于传统平养，楼房模式可节省土地70%以上，并借助智能环控与AI巡检，为猪群创造稳定的微气候环境，是现代养猪业实现ESG合规与高效生产的核心路径。研究表明，楼房猪场的PSY（每头母猪年提供断奶仔猪数）可比传统平养提升15-20%。</p>`,
+        folder: 'loufang',
+        color: '#0d9488'
+    },
+    {
+        id: 'jingzhunshebei',
+        name: '🎯 精准饲喂设备',
+        icon: 'fa-chart-line',
+        desc: `<p class="mb-3">精准饲喂设备是将"被动投料"转变为"主动营养干预"的关键技术。基于电子母猪饲喂站(ESF)与物联网传感器，系统能根据每头猪的日龄、体重、采食习惯及健康状态，动态计算并分配最优日粮。</p>
+        <p>该技术不仅将饲料浪费降低15-20%，更通过无应激给药与个体化营养策略，显著提升猪群均匀度与抗病力。结合云端配方优化，它让"料肉比(FCR)"这一核心指标变得可量化、可预测、可优化。现代精准饲喂设备还支持多阶段饲喂、发情检测自动标记、异常采食预警等高级功能。</p>`,
+        folder: 'jingzhunshebei',
+        color: '#ea580c'
+    },
+    {
+        id: 'zhinengguanli',
+        name: '🤖 智能养猪管理设备系统',
+        icon: 'fa-microchip',
+        desc: `<p class="mb-3">智能养猪管理设备系统是猪场的"数字大脑"，融合物联网(IoT)、人工智能(AI)与边缘计算。AI音频识别技术能在猪只咳嗽、打喷嚏等症状爆发前72小时发出预警，而智能环控与自动清粪机器人则构建了全天候的"免疫防御环境"。</p>
+        <p>系统自动整合发情检测、分娩预警、生产绩效(PSY/MSY)等数据流，生成可视化决策看板。它彻底颠覆了传统的"巡栏经验主义"，让管理从"人找问题"进化为"数据驱动决策"。智能管理设备还包括智能称重系统、自动分栏系统、环境传感器网络等。</p>`,
+        folder: 'zhinengguanli',
+        color: '#2563eb'
+    },
+    {
+        id: 'jingzhunyingyang',
+        name: '🥗 精准营养研究',
+        icon: 'fa-apple-alt',
+        desc: `<p class="mb-3">精准营养研究是解锁猪只遗传潜力的钥匙。基于净能体系与可消化氨基酸平衡模型，我们能够为不同基因型、不同生长阶段的猪群定制"动态日粮配方"。</p>
+        <p>该研究强调低蛋白日粮与功能性添加剂（酶制剂、益生菌、植物提取物）的协同使用，在降低饲料成本的同时，改善肠道微生态，减少氮磷排放。通过"肠-肺轴"机制，精准营养还能间接提升猪群对呼吸道疾病的抵抗力，是实现增效降本与绿色养殖的双赢策略。最新研究表明，精准营养技术可提高日增重8-12%，降低料肉比0.15-0.25。</p>`,
+        folder: 'jingzhunyingyang',
+        color: '#7c3aed'
+    }
+];
+
+let currentPdfDoc = null;
+let currentPageNum = 1;
+let totalPages = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderNav();
+    if(categories.length > 0) loadCategory(categories[0].id);
+    
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+        const menu = document.getElementById('mobileMenu');
+        menu.classList.toggle('hidden');
+    });
+    
+    document.getElementById('prevPageBtn').addEventListener('click', onPrevPage);
+    document.getElementById('nextPageBtn').addEventListener('click', onNextPage);
+});
+
+function renderNav() {
+    const navMenu = document.getElementById('navMenu');
+    const mobileNav = document.getElementById('mobileNavMenu');
+    
+    const html = categories.map((cat, idx) => `
+        <a onclick="loadCategory('${cat.id}')" class="nav-item ${idx === 0 ? 'active' : ''} px-4 py-2">
+            ${cat.name}
+        </a>
+    `).join('');
+    
+    navMenu.innerHTML = html;
+    mobileNav.innerHTML = categories.map(cat => `
+        <a onclick="loadCategory('${cat.id}'); document.getElementById('mobileMenu').classList.add('hidden');" 
+           class="nav-item block px-4 py-2 rounded-lg">${cat.name}</a>
+    `).join('');
+}
+
+async function loadCategory(categoryId) {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return;
+    
+    // 更新导航高亮
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => {
+        if (el.textContent.includes(category.name.split(' ')[1] || category.name)) {
+            el.classList.add('active');
+        }
+    });
+    
+    const contentArea = document.getElementById('contentArea');
+    
+    // 显示加载状态
+    contentArea.innerHTML = `
+        <div class="flex justify-center items-center py-20">
+            <div class="loading-spinner"></div>
+            <span class="ml-3 text-gray-500">加载文件中...</span>
+        </div>
+    `;
+    
+    // 加载文件列表
+    const files = await loadFiles(category.folder);
+    
+    // 渲染内容
+    contentArea.innerHTML = `
+        <div class="section-card">
+            <div class="section-header">
+                <div class="flex items-center space-x-3">
+                    <i class="fas ${category.icon} text-2xl" style="color: ${category.color}"></i>
+                    <h2 class="text-2xl font-bold">${category.name}</h2>
+                </div>
+            </div>
+            <div class="section-content">
+                <div class="text-gray-600 leading-relaxed space-y-3">
+                    ${category.desc}
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-700">
+                        <i class="fas fa-file-alt text-emerald-500 mr-2"></i>相关资料文档
+                    </h3>
+                    <span class="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-500">共 ${files.length} 份</span>
+                </div>
+                <div class="file-grid" id="fileGrid_${category.id}"></div>
+            </div>
+        </div>
+    `;
+    
+    renderFileGrid(files, category.id);
+}
+
+async function loadFiles(folder) {
+    try {
+        const apiUrl = `/get_files.php?root=${DOCS_BASE_PATH}&category=${encodeURIComponent(folder)}`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        return data.files || [];
+    } catch (error) {
+        console.log('加载文件失败:', error);
+        return [];
+    }
+}
+
+function renderFileGrid(files, categoryId) {
+    const gridContainer = document.getElementById(`fileGrid_${categoryId}`);
+    
+    if (!gridContainer) return;
+    
+    if (files.length === 0) {
+        gridContainer.innerHTML = `
+            <div class="col-span-full text-center py-12 text-gray-400">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p>暂无文档资料</p>
+                <p class="text-sm mt-2">请将 PDF 或 PPT 文件上传到 docs/${DOCS_BASE_PATH}/${categoryId}/ 目录</p>
+            </div>
+        `;
+        return;
+    }
+    
+    gridContainer.innerHTML = files.map(file => {
+        const isPdf = file.ext === 'pdf';
+        const isPpt = file.ext === 'pptx' || file.ext === 'ppt';
+        const iconClass = isPdf ? 'fa-file-pdf' : (isPpt ? 'fa-file-powerpoint' : 'fa-file-alt');
+        const iconColor = isPdf ? 'text-red-500' : (isPpt ? 'text-orange-500' : 'text-emerald-500');
+        const bgColor = isPdf ? 'bg-red-50' : (isPpt ? 'bg-orange-50' : 'bg-emerald-50');
+        
+        return `
+            <div class="file-card" onclick="openFile('${file.title.replace(/'/g, "\\'")}', '${file.url.replace(/'/g, "\\'")}', ${isPdf})">
+                <div class="flex items-start justify-between">
+                    <div class="w-10 h-10 rounded-lg ${bgColor} flex items-center justify-center">
+                        <i class="fas ${iconClass} ${iconColor} text-xl"></i>
+                    </div>
+                    <span class="text-xs text-gray-400">${file.date || ''}</span>
+                </div>
+                <h3 class="font-medium text-gray-800 mt-3 line-clamp-2 text-sm" title="${file.title}">${file.title}</h3>
+                <div class="flex justify-between items-center mt-3">
+                    <span class="text-xs text-gray-400">${file.size || ''}</span>
+                    ${isPdf ? '<span class="btn-preview"><i class="fas fa-eye mr-1"></i>在线预览</span>' : '<span class="text-xs text-gray-400"><i class="fas fa-download mr-1"></i>点击下载</span>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openFile(title, url, isPdf) {
+    const modal = document.getElementById('previewModal');
+    const previewTitle = document.getElementById('previewTitle');
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    previewTitle.innerText = title;
+    downloadBtn.href = url;
+    
+    if (isPdf) {
+        modal.style.display = 'flex';
+        loadPdf(url);
+    } else {
+        window.open(url, '_blank');
+    }
+}
+
+async function loadPdf(url) {
+    const canvas = document.getElementById('previewCanvas');
+    const pageInfo = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    
+    pageInfo.innerText = '加载中...';
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    
+    try {
+        const loadingTask = pdfjsLib.getDocument(url);
+        currentPdfDoc = await loadingTask.promise;
+        totalPages = currentPdfDoc.numPages;
+        currentPageNum = 1;
+        
+        pageInfo.innerText = `第 1 / ${totalPages} 页`;
+        await renderPage(currentPageNum);
+        
+        prevBtn.disabled = true;
+        nextBtn.disabled = (totalPages <= 1);
+        
+    } catch (error) {
+        closePreview();
+    }
+}
+
+async function renderPage(pageNum) {
+    if (!currentPdfDoc) return;
+    
+    const canvas = document.getElementById('previewCanvas');
+    const context = canvas.getContext('2d');
+    
+    try {
+        const page = await currentPdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.2 });
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        await page.render({
+            canvasContext: context,
+            viewport: viewport
+        }).promise;
+        
+        document.getElementById('pageInfo').innerText = `第 ${pageNum} / ${totalPages} 页`;
+        
+    } catch (error) {
+        closePreview();
+    }
+}
+
+function onPrevPage() {
+    if (!currentPdfDoc || currentPageNum <= 1) return;
+    currentPageNum--;
+    renderPage(currentPageNum);
+    document.getElementById('prevPageBtn').disabled = (currentPageNum <= 1);
+    document.getElementById('nextPageBtn').disabled = false;
+}
+
+function onNextPage() {
+    if (!currentPdfDoc || currentPageNum >= totalPages) return;
+    currentPageNum++;
+    renderPage(currentPageNum);
+    document.getElementById('prevPageBtn').disabled = false;
+    document.getElementById('nextPageBtn').disabled = (currentPageNum >= totalPages);
+}
+
+function closePreview() {
+    const modal = document.getElementById('previewModal');
+    modal.style.display = 'none';
+    
+    if (currentPdfDoc) {
+        currentPdfDoc = null;
+        currentPageNum = 1;
+        totalPages = 0;
+    }
+    
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+</script>
+</body>
+</html>
