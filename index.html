@@ -16,14 +16,13 @@
             font-family: 'Inter', sans-serif;
             background: #f5f8fc;
             color: #1a2c3e;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         /* 顶部导航栏 - 深蓝色底 + 白色文字 */
         .navbar {
             background: #1e4a76;
-            border-bottom: none;
-            padding: 16px 0;
+            padding: 14px 0;
             position: sticky;
             top: 0;
             z-index: 100;
@@ -44,13 +43,13 @@
         }
 
         .logo h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #ffffff;
         }
 
         .logo p {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #bcd0e4;
         }
 
@@ -64,8 +63,8 @@
             text-decoration: none;
             font-weight: 500;
             color: #ffffff;
-            font-size: 0.9rem;
-            padding: 6px 0;
+            font-size: 0.85rem;
+            padding: 4px 0;
             opacity: 0.85;
             transition: 0.2s;
         }
@@ -75,11 +74,11 @@
             border-bottom: 2px solid #ffffff;
         }
 
-        /* 双栏布局 */
+        /* 双栏布局：左侧2x2网格，右侧边栏 */
         .two-columns {
             display: flex;
-            gap: 40px;
-            margin: 32px 0;
+            gap: 32px;
+            margin: 28px 0;
         }
 
         .main-content {
@@ -90,99 +89,84 @@
             flex: 1;
         }
 
+        /* 2x2 模块网格 */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
         /* 模块卡片 - 白底 */
         .module-card {
             background: #ffffff;
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 32px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid #e2edf2;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid #e8edf2;
         }
 
         .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e8eef3;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef2f6;
         }
 
         .module-title {
-            font-size: 1.25rem;
+            font-size: 1rem;
             font-weight: 700;
             color: #1e4a76;
         }
 
-        .module-date {
-            font-size: 0.7rem;
-            color: #8ba3bc;
-        }
-
-        /* 文章列表 - 黑字 */
+        /* 文章列表 - 单列显示 */
         .module-articles {
             display: flex;
             flex-direction: column;
+            gap: 0;
         }
 
-        .article-row {
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #edf2f7;
-        }
-
-        .article-category {
-            background: #eef3fc;
-            color: #2c6a9e;
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 20px;
-            white-space: nowrap;
+        .article-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #eff3f8;
         }
 
         .article-link {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 500;
-            color: #1a2c3e;
+            color: #2c3e50;
             text-decoration: none;
+            display: block;
             transition: 0.2s;
+            line-height: 1.4;
         }
 
         .article-link:hover {
             color: #3b82f6;
-            text-decoration: underline;
         }
 
-        /* 侧边栏卡片 - 白底 */
+        /* 侧边栏卡片 */
         .sidebar-card {
             background: #ffffff;
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 18px 20px;
             margin-bottom: 24px;
-            border: 1px solid #e2edf2;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e8edf2;
         }
 
         .sidebar-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #1e4a76;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e8eef3;
-            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eef2f6;
+            margin-bottom: 14px;
         }
 
         .timeline-item, .hot-item {
             display: flex;
-            gap: 12px;
-            padding: 10px 0;
+            gap: 10px;
+            padding: 8px 0;
             border-bottom: 1px solid #f0f4f9;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .timeline-date {
@@ -192,7 +176,7 @@
         }
 
         .timeline-title, .hot-title {
-            color: #1a2c3e;
+            color: #2c3e50;
             text-decoration: none;
         }
 
@@ -203,23 +187,27 @@
         .hot-item .rank {
             color: #3b82f6;
             font-weight: 600;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            min-width: 22px;
         }
 
-        /* 底部 */
         footer {
             background: #e9f0f7;
-            border-radius: 24px 24px 0 0;
-            padding: 28px 24px;
+            border-radius: 20px 20px 0 0;
+            padding: 24px;
             text-align: center;
             color: #4a7a9e;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             margin-top: 20px;
         }
 
         @media (max-width: 900px) {
             .two-columns {
                 flex-direction: column;
+            }
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
             }
             .container {
                 padding: 0 16px;
@@ -250,42 +238,40 @@
 </div>
 
 <div class="container two-columns">
-    <!-- 左侧主内容区 -->
+    <!-- 左侧主内容区：2x2 模块网格 -->
     <div class="main-content">
-        <!-- 模块1：生产管理 -->
-        <div class="module-card">
-            <div class="module-header">
-                <span class="module-title">📋 生产管理</span>
-                <span class="module-date">2026年05月27日</span>
+        <div class="modules-grid">
+            <!-- 模块1：生产管理 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-title">📋 生产管理</div>
+                </div>
+                <div class="module-articles" id="production-list"></div>
             </div>
-            <div class="module-articles" id="production-list"></div>
-        </div>
 
-        <!-- 模块2：猪群健康 -->
-        <div class="module-card">
-            <div class="module-header">
-                <span class="module-title">🩺 猪群健康</span>
-                <span class="module-date">2026年05月27日</span>
+            <!-- 模块2：猪群健康 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-title">🩺 猪群健康</div>
+                </div>
+                <div class="module-articles" id="health-list"></div>
             </div>
-            <div class="module-articles" id="health-list"></div>
-        </div>
 
-        <!-- 模块3：批次化生产 -->
-        <div class="module-card">
-            <div class="module-header">
-                <span class="module-title">📅 批次化生产</span>
-                <span class="module-date">2026年05月27日</span>
+            <!-- 模块3：批次化生产 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-title">📅 批次化生产</div>
+                </div>
+                <div class="module-articles" id="batch-list"></div>
             </div>
-            <div class="module-articles" id="batch-list"></div>
-        </div>
 
-        <!-- 模块4：管理思路 -->
-        <div class="module-card">
-            <div class="module-header">
-                <span class="module-title">💡 管理思路</span>
-                <span class="module-date">2026年05月27日</span>
+            <!-- 模块4：管理思路 -->
+            <div class="module-card">
+                <div class="module-header">
+                    <div class="module-title">💡 管理思路</div>
+                </div>
+                <div class="module-articles" id="management-list"></div>
             </div>
-            <div class="module-articles" id="management-list"></div>
         </div>
     </div>
 
@@ -372,20 +358,20 @@
         { date: "05/26", title: "猪群健康模块内容更新" },
         { date: "05/25", title: "生产管理模块优化排版" },
         { date: "05/24", title: "管理思路模块新增行业观点" },
-        { date: "05/23", title: "网站整体改版为双栏布局" },
+        { date: "05/23", title: "网站整体改版为2x2网格+单列文章" },
         { date: "05/22", title: "修复移动端显示问题" },
         { date: "05/21", title: "新增热点文章侧边栏" }
     ];
 
-    function renderModule(moduleId, articles, categoryName) {
+    // 渲染模块：单列显示
+    function renderModule(moduleId, articles) {
         const container = document.getElementById(`${moduleId}-list`);
         if (!container) return;
         let html = '';
         articles.forEach(title => {
             html += `
-                <div class="article-row">
-                    <span class="article-category">${categoryName}</span>
-                    <a href="#" class="article-link" data-category="${categoryName}" data-title="${title}">${title}</a>
+                <div class="article-item">
+                    <a href="#" class="article-link" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>
                 </div>
             `;
         });
@@ -400,7 +386,7 @@
             html += `
                 <div class="hot-item">
                     <span class="rank">${index + 1}</span>
-                    <a href="#" class="hot-title" data-title="${title}">${title}</a>
+                    <a href="#" class="hot-title" data-title="${title.replace(/"/g, '&quot;')}">${title}</a>
                 </div>
             `;
         });
@@ -415,7 +401,7 @@
             html += `
                 <div class="timeline-item">
                     <span class="timeline-date">${item.date}</span>
-                    <a href="#" class="timeline-title" data-title="${item.title}">${item.title}</a>
+                    <a href="#" class="timeline-title" data-title="${item.title.replace(/"/g, '&quot;')}">${item.title}</a>
                 </div>
             `;
         });
@@ -423,10 +409,10 @@
     }
 
     function initModules() {
-        renderModule('production', articlesData.production, '生产管理');
-        renderModule('health', articlesData.health, '猪群健康');
-        renderModule('batch', articlesData.batch, '批次化生产');
-        renderModule('management', articlesData.management, '管理思路');
+        renderModule('production', articlesData.production);
+        renderModule('health', articlesData.health);
+        renderModule('batch', articlesData.batch);
+        renderModule('management', articlesData.management);
         renderHotArticles();
         renderTimeline();
     }
