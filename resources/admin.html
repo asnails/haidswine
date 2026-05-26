@@ -84,10 +84,20 @@
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .success-msg {
             background: #d1fae5;
             color: #065f46;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error-msg {
+            background: #fee2e2;
+            color: #991b1b;
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 16px;
@@ -112,6 +122,14 @@
         .markdown-preview ul, .markdown-preview ol { margin-left: 20px; }
         .markdown-preview p { margin: 6px 0; }
         hr { margin: 16px 0; border: none; border-top: 1px solid #e2e8f0; }
+        .loading { text-align: center; padding: 40px; color: #8ba3bc; }
+        .github-info {
+            background: #eef2ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
         @media (max-width: 900px) {
             .two-columns { flex-direction: column; }
             .form-panel, .list-panel { min-width: auto; }
@@ -123,20 +141,25 @@
         <h1>📝 牧知汇 - 内容管理后台</h1>
         <div>
             <a href="index.html" target="_blank">🏠 查看首页</a>
-            <a href="articles.json" target="_blank" style="margin-left: 12px;">📄 查看 JSON</a>
+            <a href="articles.json" target="_blank" id="jsonLink">📄 查看 JSON</a>
         </div>
     </div>
     <div class="container">
+        <div class="github-info">
+            💡 提示：文章数据直接读写自 GitHub 上的 <strong>articles.json</strong> 文件。<br>
+            编辑后点击「同步到 GitHub」，会下载更新后的文件，请上传到仓库覆盖原文件即可生效。
+        </div>
+        
         <div class="status-bar">
             <span>📊 文章总数: <strong id="totalCount">0</strong></span>
-            <span>💾 数据存储于: <strong>articles.json</strong></span>
-            <button class="btn-secondary btn-sm" onclick="refreshList()">🔄 刷新</button>
+            <span>📁 数据源: <strong id="dataSource">加载中...</strong></span>
+            <button class="btn-secondary btn-sm" onclick="loadFromGitHub()">🔄 从 GitHub 加载</button>
         </div>
         
         <div id="successMsg" class="success-msg"></div>
+        <div id="errorMsg" class="error-msg"></div>
         
         <div class="two-columns">
-            <!-- 左侧：编辑表单 -->
             <div class="form-panel">
                 <h3 style="margin-bottom: 20px;" id="formTitle">📝 新建文章</h3>
                 <input type="hidden" id="editIndex" value="-1">
@@ -166,23 +189,22 @@
                     <div id="markdownPreview" class="markdown-preview"></div>
                 </div>
                 
-                <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button class="btn" onclick="saveArticle()">💾 保存文章</button>
+                <div style="display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap;">
+                    <button class="btn" onclick="saveArticle()">💾 保存到本地</button>
+                    <button class="btn-success" onclick="syncToGitHub()">📤 同步到 GitHub</button>
                     <button class="btn-secondary" onclick="clearForm()">🗑️ 清空表单</button>
                     <button id="deleteBtn" class="btn-danger" onclick="deleteCurrentArticle()" style="display: none;">🗑️ 删除文章</button>
                 </div>
             </div>
             
-            <!-- 右侧：文章列表 -->
             <div class="list-panel">
                 <h3 style="margin-bottom: 16px;">📋 文章列表</h3>
-                <div id="articleList"></div>
+                <div id="articleList" class="loading">加载中...</div>
             </div>
         </div>
         
         <hr style="margin: 24px 0;">
         
-        <!-- 批量操作区域 -->
         <div style="background: white; border-radius: 16px; padding: 20px;">
             <h3 style="margin-bottom: 16px;">⚙️ 批量操作</h3>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
@@ -191,57 +213,98 @@
                     📤 导入 JSON 文件
                     <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFromJSON(this)">
                 </label>
-                <button class="btn-danger" onclick="confirmClearAll()">⚠️ 清空所有文章</button>
                 <button class="btn-success" onclick="loadSampleData()">📚 加载示例数据</button>
             </div>
             <p style="font-size: 12px; color: #64748b; margin-top: 12px;">
-                💡 提示：文章数据保存在浏览器的 localStorage 中，点击「导出 JSON 文件」可下载到本地，上传到 GitHub 即可生效。
+                📌 操作流程：编辑文章 → 点击「保存到本地」→ 点击「同步到 GitHub」→ 下载 JSON 文件 → 上传到 GitHub 仓库的 resources 目录覆盖 articles.json
             </p>
         </div>
     </div>
 
     <script>
-        // 分类映射（保持与 index.html 一致）
-        const CATEGORY_ORDER = ['生产管理', '猪群健康', '批次化生产', '管理思路'];
-        
-        // 存储文章数据
+        // 文章数据
         let articles = [];
+        let isLoading = false;
+        
+        // JSON 文件路径（相对于当前目录）
+        const JSON_PATH = 'articles.json';
         
         // 初始化
-        function init() {
-            loadFromLocalStorage();
+        async function init() {
+            await loadFromGitHub();
+            bindEvents();
+        }
+        
+        // 从 GitHub 加载 articles.json
+        async function loadFromGitHub() {
+            if (isLoading) return;
+            isLoading = true;
+            document.getElementById('dataSource').innerHTML = '加载中...';
+            document.getElementById('articleList').innerHTML = '<div class="loading">📡 正在从 GitHub 加载数据...</div>';
+            
+            try {
+                // 添加时间戳防止缓存
+                const url = `${JSON_PATH}?t=${Date.now()}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    articles = data;
+                    showMessage('✅ 已从 GitHub 加载数据', 'success');
+                    document.getElementById('dataSource').innerHTML = 'GitHub ✅';
+                } else {
+                    throw new Error('数据格式错误');
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                document.getElementById('dataSource').innerHTML = '加载失败，使用本地缓存';
+                showMessage('⚠️ 无法从 GitHub 加载，使用本地缓存数据', 'error');
+                // 尝试从 localStorage 加载
+                const stored = localStorage.getItem('muzhihui_articles_backup');
+                if (stored) {
+                    articles = JSON.parse(stored);
+                    showMessage('📦 已从本地缓存加载', 'info');
+                } else {
+                    loadSampleData();
+                }
+            }
+            
             renderList();
             updateTotalCount();
+            isLoading = false;
         }
         
-        // 从 localStorage 加载
-        function loadFromLocalStorage() {
-            const stored = localStorage.getItem('muzhihui_articles');
-            if (stored) {
-                try {
-                    articles = JSON.parse(stored);
-                } catch(e) { articles = []; }
-            }
-            if (!articles || articles.length === 0) {
-                loadSampleData();
-            }
+        // 保存到本地存储（备份）
+        function saveToLocalBackup() {
+            localStorage.setItem('muzhihui_articles_backup', JSON.stringify(articles));
         }
         
-        // 保存到 localStorage
-        function saveToLocalStorage() {
-            localStorage.setItem('muzhihui_articles', JSON.stringify(articles));
-            updateTotalCount();
+        // 同步到 GitHub（导出文件供上传）
+        function syncToGitHub() {
+            const jsonStr = JSON.stringify(articles, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'articles.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showMessage('📤 文件已下载，请上传到 GitHub 仓库 /resources/ 目录覆盖原文件', 'success');
         }
         
         // 渲染文章列表
         function renderList() {
             const container = document.getElementById('articleList');
-            if (articles.length === 0) {
+            if (!articles || articles.length === 0) {
                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #8ba3bc;">暂无文章，点击「加载示例数据」开始</div>';
                 return;
             }
             
-            // 按分类分组显示
+            const CATEGORY_ORDER = ['生产管理', '猪群健康', '批次化生产', '管理思路'];
             let html = '';
             CATEGORY_ORDER.forEach(category => {
                 const categoryArticles = articles.filter(a => a.type === category);
@@ -252,7 +315,7 @@
                     const originalIndex = articles.findIndex(a => a === article);
                     html += `
                         <div class="article-item" onclick="editArticle(${originalIndex})">
-                            <span class="article-category">${article.type}</span>
+                            <span class="article-category">${escapeHtml(article.type)}</span>
                             <span class="article-title">${escapeHtml(article.title)}</span>
                             <div class="article-actions">
                                 <button class="btn-secondary btn-sm" onclick="event.stopPropagation(); editArticle(${originalIndex})">✏️ 编辑</button>
@@ -278,14 +341,11 @@
             document.getElementById('formTitle').innerHTML = '✏️ 编辑文章';
             document.getElementById('deleteBtn').style.display = 'inline-block';
             
-            // 更新预览
             updatePreview();
-            
-            // 滚动到表单
             document.querySelector('.form-panel').scrollIntoView({ behavior: 'smooth' });
         }
         
-        // 保存文章
+        // 保存文章到内存
         function saveArticle() {
             const type = document.getElementById('articleType').value;
             const title = document.getElementById('articleTitle').value.trim();
@@ -300,32 +360,31 @@
             const newArticle = { type, title, content };
             
             if (editIndex >= 0 && articles[editIndex]) {
-                // 编辑现有文章
                 articles[editIndex] = newArticle;
-                showMessage('✅ 文章已更新');
+                showMessage('✅ 文章已更新（内存中），请点击「同步到 GitHub」保存', 'success');
             } else {
-                // 新增文章
                 articles.push(newArticle);
-                showMessage('✅ 新文章已添加');
+                showMessage('✅ 新文章已添加（内存中），请点击「同步到 GitHub」保存', 'success');
             }
             
-            saveToLocalStorage();
+            saveToLocalBackup();
             renderList();
             clearForm();
+            updateTotalCount();
         }
         
         // 删除文章
         function deleteArticle(index) {
             if (confirm('确定要删除这篇文章吗？')) {
                 articles.splice(index, 1);
-                saveToLocalStorage();
+                saveToLocalBackup();
                 renderList();
                 clearForm();
-                showMessage('🗑️ 文章已删除');
+                updateTotalCount();
+                showMessage('🗑️ 文章已删除，请点击「同步到 GitHub」保存更改', 'success');
             }
         }
         
-        // 删除当前编辑的文章
         function deleteCurrentArticle() {
             const editIndex = parseInt(document.getElementById('editIndex').value);
             if (editIndex >= 0 && articles[editIndex]) {
@@ -333,7 +392,6 @@
             }
         }
         
-        // 清空表单
         function clearForm() {
             document.getElementById('editIndex').value = '-1';
             document.getElementById('articleType').value = '生产管理';
@@ -344,27 +402,10 @@
             document.getElementById('markdownPreview').innerHTML = '<p style="color: #8ba3bc;">预览将显示在这里...</p>';
         }
         
-        // 刷新列表
-        function refreshList() {
-            loadFromLocalStorage();
-            renderList();
-            showMessage('🔄 已刷新');
-        }
-        
-        // 导出 JSON
         function exportToJSON() {
-            const dataStr = JSON.stringify(articles, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'articles.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            showMessage('📥 文件已导出，请上传到 GitHub 仓库的 resources 目录');
+            syncToGitHub();
         }
         
-        // 导入 JSON
         function importFromJSON(input) {
             const file = input.files[0];
             if (!file) return;
@@ -375,9 +416,10 @@
                     const imported = JSON.parse(e.target.result);
                     if (Array.isArray(imported)) {
                         articles = imported;
-                        saveToLocalStorage();
+                        saveToLocalBackup();
                         renderList();
-                        showMessage('📤 导入成功！');
+                        updateTotalCount();
+                        showMessage('📤 导入成功！请点击「同步到 GitHub」保存', 'success');
                     } else {
                         showMessage('文件格式错误：需要数组格式', 'error');
                     }
@@ -389,7 +431,6 @@
             input.value = '';
         }
         
-        // 加载示例数据
         function loadSampleData() {
             articles = [
                 { type: "生产管理", title: "6000头规模母猪场生产节律设计", content: "# 生产节律设计\n\n规模化猪场的生产节律设计是实现高效运转的核心。\n\n**关键指标：**\n- 年产胎次：2.2-2.4胎/年\n- 非生产天数：<40天\n- 分娩率：>85%" },
@@ -398,41 +439,31 @@
                 { type: "批次化生产", title: "18天批次生产模式详解与优势分析", content: "# 18天批次模式\n\n## 核心参数\n- 批次间隔：18天\n- 母猪组数：8组\n- 年产批次数：20.3批\n\n**优势：**\n* 年产胎次更高\n* 产房利用率提升30%" },
                 { type: "管理思路", title: "秦英林：养猪虽传统，但值得深耕", content: "# 秦英林观点\n\n## 核心理念\n养猪行业虽然传统，但通过**科技创新**和**管理升级**，仍有巨大的发展空间。\n\n> 目标：断奶成本控制在240元/头以内" }
             ];
-            saveToLocalStorage();
+            saveToLocalBackup();
             renderList();
             clearForm();
-            showMessage('📚 示例数据已加载');
+            updateTotalCount();
+            showMessage('📚 示例数据已加载，请点击「同步到 GitHub」保存', 'success');
         }
         
-        // 清空所有文章
-        function confirmClearAll() {
-            if (confirm('⚠️ 警告：这将删除所有文章！确定要继续吗？')) {
-                articles = [];
-                saveToLocalStorage();
-                renderList();
-                clearForm();
-                showMessage('🗑️ 所有文章已清空');
-            }
-        }
-        
-        // 更新总数显示
         function updateTotalCount() {
             document.getElementById('totalCount').innerText = articles.length;
         }
         
-        // 显示消息
         function showMessage(msg, type = 'success') {
             const msgDiv = document.getElementById('successMsg');
-            msgDiv.textContent = msg;
-            msgDiv.style.backgroundColor = type === 'success' ? '#d1fae5' : '#fee2e2';
-            msgDiv.style.color = type === 'success' ? '#065f46' : '#991b1b';
-            msgDiv.style.display = 'block';
-            setTimeout(() => {
-                msgDiv.style.display = 'none';
-            }, 3000);
+            const errorDiv = document.getElementById('errorMsg');
+            if (type === 'error') {
+                errorDiv.textContent = msg;
+                errorDiv.style.display = 'block';
+                setTimeout(() => { errorDiv.style.display = 'none'; }, 3000);
+            } else {
+                msgDiv.textContent = msg;
+                msgDiv.style.display = 'block';
+                setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+            }
         }
         
-        // 简单 Markdown 预览
         function updatePreview() {
             const content = document.getElementById('articleContent').value;
             const previewDiv = document.getElementById('markdownPreview');
@@ -445,34 +476,26 @@
         
         function simpleMarkdownToHTML(text) {
             let html = text;
-            // 标题
             html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
             html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            // 粗体
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            // 斜体
             html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            // 无序列表
             html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
             html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-            // 有序列表
             html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
-            // 引用
             html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
-            // 分割线
             html = html.replace(/^---$/gm, '<hr>');
-            // 段落
             html = html.replace(/\n\n/g, '</p><p>');
             html = '<p>' + html + '</p>';
-            // 清理空标签
             html = html.replace(/<p><\/p>/g, '');
             return html;
         }
         
-        // 监听内容变化实时预览
-        document.getElementById('articleContent').addEventListener('input', updatePreview);
-        document.getElementById('articleTitle').addEventListener('input', updatePreview);
+        function bindEvents() {
+            document.getElementById('articleContent').addEventListener('input', updatePreview);
+            document.getElementById('articleTitle').addEventListener('input', updatePreview);
+        }
         
         function escapeHtml(str) {
             if (!str) return '';
